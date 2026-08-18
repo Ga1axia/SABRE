@@ -1,0 +1,10 @@
+[Unit]
+Description=SABRE watch
+[Service]
+Type=simple
+Environment=SABRE_HOME={{SABRE_HOME}}
+WorkingDirectory={{SABRE_HOME}}/app
+ExecStart={{PYTHON}} -m core.watch
+Restart=always
+[Install]
+WantedBy=default.target

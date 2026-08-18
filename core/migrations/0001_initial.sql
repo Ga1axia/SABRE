@@ -1,0 +1,1 @@
+-- Initial schema. Forward-only. Rollback is snapshot restore.

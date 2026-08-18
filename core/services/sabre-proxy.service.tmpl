@@ -1,0 +1,10 @@
+[Unit]
+Description=SABRE proxy
+[Service]
+Type=simple
+Environment=SABRE_HOME={{SABRE_HOME}}
+WorkingDirectory={{SABRE_HOME}}/app
+ExecStart={{PYTHON}} -m core.proxy.server
+Restart=always
+[Install]
+WantedBy=multi-user.target

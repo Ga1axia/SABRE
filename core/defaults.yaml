@@ -1,0 +1,86 @@
+# Shipped defaults. Never edit this file. User overrides live in config/.
+topology: solo
+posture: lean
+
+users:
+  agent: sabre
+  gate: sabre-gate
+
+paths:
+  console_host: 127.0.0.1
+  console_port: 8787
+  gate_port: 8788
+  proxy_port: 8789
+  hooks_port: 8790
+  watch_port: 8791
+
+drivers:
+  inference: { name: openai_compat, model_core: gpt-4.1, model_worker: gpt-4.1-mini, model_review: gpt-4.1-mini }
+  messaging: { name: slack }
+  cards: { name: disabled, enabled: false }
+  payments: { name: disabled, enabled: false }
+  hosting: { name: disabled, enabled: false }
+
+delegation:
+  max_concurrent_children: 2
+  max_iterations: 40
+
+loop_caps:
+  max_web_search: 15
+  max_subagents: 8
+
+compression:
+  enabled: true
+  threshold: 0.5
+  target: 0.2
+  protect_last: 20
+
+session:
+  recycle_on: [venture_boundary, 4h_elapsed]
+
+envelopes:
+  spend:
+    per_transaction_max: 50
+    daily_max: 150
+    monthly_max: 1200
+    per_venture_max: 400
+    allowed_categories: [hosting, domains, saas, ads, api_credits, contractor_micro]
+    blocked_categories: [equity, legal_retainer, crypto, gambling, prepaid_cards, payroll]
+  inference:
+    daily_usd: 25
+    per_venture_usd: 120
+  publish:
+    domains_allowed: []
+  outreach:
+    email_per_day: 40
+    email_per_recipient_domain_per_day: 3
+    dm_per_platform_per_day: 15
+    new_account_creation_per_week: 2
+  code:
+    venture_repos: unrestricted
+    core_repo: proposal_only
+  portfolio:
+    max_concurrent_ventures: 3
+  auto_raise:
+    rule: "spend.daily_max +20% per consecutive week of positive net contribution"
+    cap_multiple: 3.0
+
+channels:
+  - directives
+  - requests
+  - approvals
+  - status
+  - logs
+  - ventures
+  - postmortems
+  - revenue
+
+amber_hold_minutes: 30
+red_expire_days: 7
+task_lease_seconds: 900
+heartbeat_seconds: 300
+watch_poll_seconds: 30
+snapshot_seconds: 60
+
+reconcile:
+  tolerance_cents: 100

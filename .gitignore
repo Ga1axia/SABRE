@@ -1,0 +1,52 @@
+# User-owned after first write
+config/sabre.yaml
+config/envelopes.yaml
+config/accounts.yaml
+config/personas.yaml
+config/setup.json
+!config/.gitkeep
+
+# Runtime / work
+work/board/*
+!work/board/.gitkeep
+work/ventures/*
+!work/ventures/.gitkeep
+work/scratch/*
+!work/scratch/.gitkeep
+work/.git
+
+# Secrets and local state
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/
+*.swp

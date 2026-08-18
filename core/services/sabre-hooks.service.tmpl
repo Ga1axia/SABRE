@@ -1,0 +1,11 @@
+[Unit]
+Description=SABRE hooks
+After=sabre-gate.service
+[Service]
+Type=simple
+Environment=SABRE_HOME={{SABRE_HOME}}
+WorkingDirectory={{SABRE_HOME}}/app
+ExecStart={{PYTHON}} -m core.hooks.server
+Restart=always
+[Install]
+WantedBy=multi-user.target

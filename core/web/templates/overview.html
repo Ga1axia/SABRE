@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SABRE</title>
+  <style>
+    body { font: 16px/1.4 system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; }
+    dl { display: grid; grid-template-columns: 9rem 1fr; gap: .4rem 1rem; }
+    dt { color: #555; }
+    form { display: inline; }
+    button { margin-right: .5rem; padding: .4rem .8rem; }
+  </style>
+</head>
+<body>
+  <h1>SABRE overview</h1>
+  <dl>
+    <dt>topology</dt><dd>{{topology}}</dd>
+    <dt>kill</dt><dd>{{kill}}</dd>
+    <dt>no-spend</dt><dd>{{no_spend}}</dd>
+    <dt>ventures</dt><dd>{{ventures}}</dd>
+    <dt>spend</dt><dd>{{spend}}</dd>
+  </dl>
+  <p>This console is bound to {{host}}:{{port}} and is never internet-exposed. Approvals happen in Slack.</p>
+  <form method="post" action="/kill"><button>Kill</button></form>
+  <form method="post" action="/unkill"><button>Unkill</button></form>
+</body>
+</html>
