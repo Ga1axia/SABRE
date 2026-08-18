@@ -45,6 +45,10 @@ memory = "core.drivers.payments.memory:MemoryPaymentDriver"
 [project.entry-points."sabre.drivers.hosting"]
 disabled = "core.drivers.hosting.disabled:DisabledHostingDriver"
 
+[project.entry-points."sabre.drivers.alerts"]
+memory = "core.drivers.alerts.memory:MemoryAlertDriver"
+smtp = "core.drivers.alerts.smtp:SmtpAlertDriver"
+
 [tool.setuptools.packages.find]
 include = ["core*", "sabre*"]
 

@@ -41,6 +41,8 @@ def _builtin(slot: str, name: str):
         ("payments", "disabled"): "core.drivers.payments.disabled:DisabledPaymentDriver",
         ("payments", "memory"): "core.drivers.payments.memory:MemoryPaymentDriver",
         ("hosting", "disabled"): "core.drivers.hosting.disabled:DisabledHostingDriver",
+        ("alerts", "memory"): "core.drivers.alerts.memory:MemoryAlertDriver",
+        ("alerts", "smtp"): "core.drivers.alerts.smtp:SmtpAlertDriver",
     }
     target = mapping.get((slot, name))
     if not target:

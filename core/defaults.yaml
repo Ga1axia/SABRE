@@ -21,6 +21,11 @@ drivers:
   payments: { name: disabled, enabled: false }
   hosting: { name: disabled, enabled: false }
 
+alerts:
+  fallback:
+    name: ""
+    to: ""
+
 delegation:
   max_concurrent_children: 2
   max_iterations: 40

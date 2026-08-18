@@ -16,7 +16,7 @@ from core.gate.submit import effect_drivers
 from core.net import request as net_request
 from core.net import set_hooks
 from core.paths import Paths, default_home
-from core.watch.alert import alert, alert_once
+from core.watch.alert import alert, alert_once, flush_queue
 from core.watch.control import bind
 from core.watch.heartbeat import beat, missed_heartbeats
 from core.watch.killswitch import engage, is_killed
@@ -59,6 +59,7 @@ def run() -> None:
     load_env(paths)
     settings = load_settings(paths)
     _wire_circuit_alerts(paths)
+    flush_queue(paths)
     httpd = bind(settings)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     interval = int(settings.raw.get("watch_poll_seconds") or 30)

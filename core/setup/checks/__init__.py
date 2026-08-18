@@ -140,7 +140,21 @@ def check_browser_profile(paths: Paths, settings: Settings):
         return False, err
     if not resolve_binary():
         return False, "no chromium-family browser on PATH"
-    return True, "launch --user-data-dir is the SABRE profile"
+    return True, f"launch --user-data-dir is {paths.browser_profile}"
+
+
+def check_browser_cdp_url(paths: Paths, settings: Settings):
+    """Fail if Hermes would attach to a Chrome SABRE does not own."""
+    from core.runtime.hermes import hermes_home
+    from core.runtime.hermes_browser import configured_cdp_url, is_sabre_owned_cdp
+
+    cfg_path = hermes_home(paths) / "config.yaml"
+    if not cfg_path.exists():
+        return "skip", "hermes config.yaml not written"
+    url = configured_cdp_url(paths)
+    if is_sabre_owned_cdp(paths, url):
+        return True, "browser.cdp_url unset" if not url else f"cdp_url is SABRE-owned ({url})"
+    return False, f"browser.cdp_url points at a foreign endpoint: {url}"
 
 
 def check_iso_browser(paths: Paths, settings: Settings):
@@ -270,6 +284,34 @@ def check_optional(paths: Paths, settings: Settings):
     return True, "optional providers configured"
 
 
+def check_alert_fallback(paths: Paths, settings: Settings):
+    cards = settings.raw.get("drivers", {}).get("cards", {})
+    payments = settings.raw.get("drivers", {}).get("payments", {})
+    money_on = bool(cards.get("enabled")) or bool(payments.get("enabled"))
+    if not money_on:
+        return True, "money drivers disabled"
+    fb = (settings.raw.get("alerts") or {}).get("fallback") or {}
+    name = fb.get("name") or os.environ.get("SABRE_ALERT_FALLBACK_DRIVER") or ""
+    if not name:
+        return False, "cards/payments enabled but alerts.fallback.name missing"
+    to = fb.get("to") or os.environ.get("SABRE_ALERT_EMAIL_TO") or ""
+    if not to:
+        return False, "alerts.fallback.to missing"
+    if os.environ.get("SABRE_SKIP_LIVE") == "1":
+        return True, f"skipped live ({name} configured)"
+    try:
+        from core.drivers.loader import load_driver
+
+        kwargs = {k: v for k, v in fb.items() if k not in {"name", "to", "enabled"}}
+        if name == "memory":
+            kwargs.setdefault("path", paths.runtime / ".alert-doctor-probe.jsonl")
+        driver = load_driver("alerts", name, **kwargs)
+        driver.send(to, "SABRE doctor probe", "alert fallback reachability probe")
+        return True, f"fallback {name} reachable"
+    except Exception as exc:
+        return False, str(exc)
+
+
 def check_mirror(paths: Paths, settings: Settings):
     url = os.environ.get("SABRE_MIRROR_URL")
     if not url:
@@ -297,6 +339,109 @@ def check_personas(paths: Paths, settings: Settings):
     n = len(list(dest.glob("*.md"))) if dest.exists() else 0
     n += len(list((core_dir() / "runtime" / "personas").glob("*.md")))
     return n > 0, f"{n} persona files"
+
+
+def check_hermes_schema(paths: Paths, settings: Settings):
+    """Fail if SABRE wrote a key Hermes v0.20.1 does not recognise."""
+    from core.runtime.hermes import hermes_home
+    from core.runtime.hermes_schema import unknown_written_keys
+
+    cfg_path = hermes_home(paths) / "config.yaml"
+    if not cfg_path.exists():
+        return "skip", "hermes config.yaml not written"
+    try:
+        import yaml
+
+        data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    except Exception as exc:  # noqa: BLE001
+        return False, f"hermes config unreadable: {exc}"
+    if not isinstance(data, dict):
+        return False, "hermes config.yaml is not a mapping"
+    unknown = unknown_written_keys(data)
+    if unknown:
+        return False, "unrecognized hermes keys: " + ", ".join(unknown)
+    return True, "all written keys are in the Hermes v0.20.1 schema"
+
+
+def check_hermes_version(paths: Paths, settings: Settings):
+    """Fail if the installed Hermes version drifted from the vendored schema."""
+    from core.runtime.hermes_schema import HERMES_VERSION, installed_hermes_version
+
+    found = installed_hermes_version()
+    if not found:
+        return "skip", "installed Hermes version unreadable"
+    if found != HERMES_VERSION:
+        return False, (
+            f"installed Hermes {found} != vendored schema {HERMES_VERSION}; "
+            "re-run the schema audit"
+        )
+    return True, f"Hermes {found} matches vendored schema"
+
+
+def check_hermes_jobs(paths: Paths, settings: Settings):
+    """Fail if cron/jobs.json is missing, malformed, or missing a SABRE job."""
+    import json
+
+    from core.runtime.hermes import hermes_home
+    from core.runtime.hermes_jobs import (
+        EXPECTED_JOB_NAMES,
+        jobs_path,
+        missing_expected_jobs,
+        validate_jobs_document,
+    )
+
+    home = hermes_home(paths)
+    cfg_path = home / "config.yaml"
+    dest = jobs_path(home)
+    if not cfg_path.exists() and not dest.exists():
+        return "skip", "hermes layout not written"
+    if not dest.exists():
+        return False, "HERMES_HOME/cron/jobs.json missing"
+    try:
+        data = json.loads(dest.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return False, f"jobs.json unreadable: {exc}"
+    errors = validate_jobs_document(data)
+    if errors:
+        return False, "jobs.json malformed: " + "; ".join(errors[:8])
+    missing = missing_expected_jobs(data)
+    if missing:
+        return False, "missing SABRE jobs: " + ", ".join(missing)
+    scripts_dir = home / "scripts"
+    expected = set(EXPECTED_JOB_NAMES)
+    absent = [
+        str(job["script"])
+        for job in data.get("jobs") or []
+        if isinstance(job, dict)
+        and job.get("name") in expected
+        and job.get("script")
+        and not (scripts_dir / str(job["script"])).is_file()
+    ]
+    if absent:
+        return False, "missing cron scripts: " + ", ".join(absent)
+    n = len(data.get("jobs") or [])
+    return True, f"{n} jobs in HERMES_HOME/cron/jobs.json"
+
+
+def check_hermes_cron_list(paths: Paths, settings: Settings):
+    """Fail if config.yaml repeats the Stage A bug: cron as a job list."""
+    from core.runtime.hermes import hermes_home
+
+    cfg_path = hermes_home(paths) / "config.yaml"
+    if not cfg_path.exists():
+        return "skip", "hermes config.yaml not written"
+    try:
+        import yaml
+
+        data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    except Exception as exc:  # noqa: BLE001
+        return False, f"hermes config unreadable: {exc}"
+    if not isinstance(data, dict):
+        return False, "hermes config.yaml is not a mapping"
+    cron = data.get("cron")
+    if isinstance(cron, list):
+        return False, "config.yaml cron: is a list; jobs belong in cron/jobs.json"
+    return True, "config.yaml cron is not a job list"
 
 
 def check_hermes(paths: Paths, settings: Settings):
@@ -344,12 +489,25 @@ def all_checks() -> list[dict]:
         {"id": "isolation.core", "severity": "fatal", "run": check_iso_core, "remedy": "sabre setup --step 2"},
         {"id": "gate.ceiling", "severity": "fatal", "run": check_ceiling, "remedy": "sabre setup --step 9"},
         {"id": "gate.unknown", "severity": "fatal", "run": check_unknown, "remedy": "check core/gate/classify.py"},
+        {
+            "id": "alerts.fallback",
+            "severity": "fatal",
+            "run": check_alert_fallback,
+            "remedy": "configure alerts.fallback (smtp or memory) when cards/payments are enabled",
+        },
         {"id": "killswitch", "severity": "fatal", "run": check_kill, "remedy": "sabre setup --step 17"},
         {
             "id": "browser.profile",
             "severity": "fatal",
             "run": check_browser_profile,
             "remedy": "sabre setup --step 13",
+        },
+        {
+            "id": "browser.cdp_url",
+            "severity": "fatal",
+            "run": check_browser_cdp_url,
+            "fix": fix_hermes,
+            "remedy": "unset browser.cdp_url and BROWSER_CDP_URL; never attach the operator's Chrome",
         },
         {"id": "mem.headroom", "severity": "warning", "run": check_mem, "remedy": "free RAM or reduce concurrency"},
         {"id": "disk.free", "severity": "warning", "run": check_disk, "remedy": "free disk"},
@@ -370,5 +528,32 @@ def all_checks() -> list[dict]:
             "run": check_hermes,
             "fix": fix_hermes,
             "remedy": "install.sh or set SABRE_HERMES_BIN; start sabre-agent once to write config",
+        },
+        {
+            "id": "runtime.hermes.schema",
+            "severity": "fatal",
+            "run": check_hermes_schema,
+            "fix": fix_hermes,
+            "remedy": "remove keys Hermes does not read; rewrite with sabre-agent or write_hermes_layout",
+        },
+        {
+            "id": "runtime.hermes.version",
+            "severity": "fatal",
+            "run": check_hermes_version,
+            "remedy": "re-run the schema audit; vendor the installed Hermes config and jobs schemas",
+        },
+        {
+            "id": "runtime.hermes.jobs",
+            "severity": "fatal",
+            "run": check_hermes_jobs,
+            "fix": fix_hermes,
+            "remedy": "sabre-agent or write_hermes_layout to write HERMES_HOME/cron/jobs.json",
+        },
+        {
+            "id": "runtime.hermes.cron-list",
+            "severity": "fatal",
+            "run": check_hermes_cron_list,
+            "fix": fix_hermes,
+            "remedy": "remove the cron job list from config.yaml; jobs belong in cron/jobs.json",
         },
     ]
