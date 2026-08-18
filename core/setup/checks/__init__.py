@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -333,6 +334,74 @@ def check_mirror(paths: Paths, settings: Settings):
     return True, url
 
 
+def _luhn_valid(digits: str) -> bool:
+    if len(digits) < 13 or len(digits) > 19:
+        return False
+    total = 0
+    rev = digits[::-1]
+    for i, ch in enumerate(rev):
+        n = int(ch)
+        if i % 2 == 1:
+            n *= 2
+            if n > 9:
+                n -= 9
+        total += n
+    return total % 10 == 0
+
+
+def _agent_readable_roots(paths: Paths) -> list[Path]:
+    return [paths.work, paths.runtime, paths.logs, paths.config_dir, paths.app]
+
+
+def _scan_text_for_pans(text: str) -> list[str]:
+    hits: list[str] = []
+    for match in re.finditer(r"\d{13,19}", text):
+        candidate = match.group(0)
+        if _luhn_valid(candidate):
+            hits.append(candidate)
+    return hits
+
+
+def check_pan_leak(paths: Paths, settings: Settings):
+    hits: list[str] = []
+    for root in _agent_readable_roots(paths):
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".webp", ".db", ".sqlite"}:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            for pan in _scan_text_for_pans(text):
+                hits.append(f"{path.relative_to(paths.home)}:{pan[:6]}…")
+    if hits:
+        return False, f"Luhn-valid PAN in agent-readable tree: {', '.join(hits[:3])}"
+    return True, "no PAN-shaped secrets in agent-readable paths"
+
+
+def check_review_configured(paths: Paths, settings: Settings):
+    cards = settings.raw.get("drivers", {}).get("cards", {})
+    payments = settings.raw.get("drivers", {}).get("payments", {})
+    money_on = settings.driver_enabled("cards") or settings.driver_enabled("payments")
+    if not money_on:
+        return True, "money drivers disabled"
+    review_key = os.environ.get("SABRE_REVIEW_KEY") or ""
+    if not review_key:
+        return False, "drivers.cards/payments enabled but SABRE_REVIEW_KEY missing"
+    review_base = os.environ.get("SABRE_REVIEW_BASE_URL") or ""
+    core_base = os.environ.get("SABRE_INFERENCE_BASE_URL") or ""
+    infer_key = os.environ.get("SABRE_INFERENCE_KEY") or os.environ.get("OPENAI_API_KEY") or ""
+    if review_base and core_base and review_base.rstrip("/") == core_base.rstrip("/") and review_key == infer_key:
+        return False, "review provider must differ from core inference provider"
+    if os.environ.get("SABRE_SKIP_LIVE") == "1":
+        return True, "skipped live (review key present)"
+    return True, "adversarial review configured"
+
+
 def check_reconcile(paths: Paths, settings: Settings):
     report = paths.home / "reconcile-last.json"
     if not report.exists():
@@ -508,6 +577,18 @@ def all_checks() -> list[dict]:
             "severity": "fatal",
             "run": check_alert_fallback,
             "remedy": "configure alerts.fallback (smtp or memory) when cards/payments are enabled",
+        },
+        {
+            "id": "review.configured",
+            "severity": "fatal",
+            "run": check_review_configured,
+            "remedy": "set SABRE_REVIEW_KEY on a different provider than core when cards/payments are enabled",
+        },
+        {
+            "id": "secrets.pan_leak",
+            "severity": "fatal",
+            "run": check_pan_leak,
+            "remedy": "move PAN/CVV to gate credential store; remove from runtime/ and work/",
         },
         {"id": "killswitch", "severity": "fatal", "run": check_kill, "remedy": "sabre setup --step 17"},
         {

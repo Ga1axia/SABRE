@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from core.db import connect
+from core.db import connect, utcnow
 from core.drivers import Charge
 from core.drivers.cards.disabled import DisabledCardDriver
 from core.drivers.cards.memory import MemoryCardDriver
@@ -30,6 +30,14 @@ def test_internal_card_payment_is_not_revenue(sabre_home):
     cards = MemoryCardDriver()
     pay = MemoryPaymentDriver()
     card = cards.issue("geo-audit", 10_000)
+    conn = connect(sabre_home.db)
+    conn.execute(
+        """INSERT INTO cards(id, venture_id, provider_ref, limit_cents, spent_cents, status, issued_at)
+           VALUES (?,?,?,?,?,?,?)""",
+        (card.id, None, card.provider_ref, card.limit_cents, 0, "active", utcnow()),
+    )
+    conn.commit()
+    conn.close()
     event = pay.verify_webhook(
         json.dumps(
             {

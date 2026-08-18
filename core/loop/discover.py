@@ -8,6 +8,7 @@ from typing import Any
 
 from core.db import utcnow
 from core.paths import Paths
+from core.watch.alert import alert_once
 
 SCAN_DIR = "opportunities"
 HN_SEARCH = "https://hn.algolia.com/api/v1/search"
@@ -19,7 +20,12 @@ def discover(paths: Paths) -> dict[str, Any]:
     dest.mkdir(parents=True, exist_ok=True)
     written: list[str] = []
     errors: list[str] = []
-    for candidate in _mine_hn():
+    try:
+        candidates = _mine_hn()
+    except Exception as exc:  # noqa: BLE001
+        alert_once(paths, "discover:source_failed", f"discovery source unreachable: {exc}", "status")
+        return {"written": [], "errors": [str(exc)], "at": utcnow()}
+    for candidate in candidates:
         slug = str(candidate.get("slug") or "")
         if not slug:
             continue
@@ -38,21 +44,9 @@ def _mine_hn() -> list[dict[str, Any]]:
         "numericFilters": "points>20",
         "hitsPerPage": 8,
     }
-    try:
-        r = httpx.get(HN_SEARCH, params=params, timeout=20.0)
-        r.raise_for_status()
-        data = r.json()
-    except Exception as exc:  # noqa: BLE001
-        return [
-            {
-                "slug": "discover-offline",
-                "ttfd_days": 30,
-                "spend_to_first_dollar_cents": 50_000,
-                "evidence": 0.1,
-                "skills": [],
-                "provenance": [{"source": "discover", "error": str(exc), "at": utcnow()}],
-            }
-        ]
+    r = httpx.get(HN_SEARCH, params=params, timeout=20.0)
+    r.raise_for_status()
+    data = r.json()
     hits = data.get("hits") if isinstance(data, dict) else []
     out: list[dict[str, Any]] = []
     for hit in hits:

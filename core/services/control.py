@@ -113,6 +113,11 @@ def stop_service(settings: Settings, name: str) -> None:
 
 
 def start_all(settings: Settings) -> None:
+    from core.setup.checks import check_review_configured
+
+    ok, msg = check_review_configured(settings.paths, settings)
+    if not ok:
+        raise SystemExit(f"refusing to start: {msg}")
     if not settings.paths.db.exists():
         from core.db import init_schema
 

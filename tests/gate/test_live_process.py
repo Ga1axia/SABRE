@@ -17,7 +17,10 @@ assert _spec and _spec.loader
 live = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(live)
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="two-process SQLite harness needs POSIX")
+pytestmark = [
+    pytest.mark.stage_h,
+    pytest.mark.skipif(sys.platform == "win32", reason="not on target platform; two-process SQLite harness needs POSIX"),
+]
 
 
 def test_live_c1_second_claimant_blocked(tmp_path):

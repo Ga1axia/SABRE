@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from http.server import ThreadingHTTPServer
 from threading import Thread
 
@@ -98,6 +99,7 @@ def test_opportunity_scan_weights_skill_reuse(sabre_home):
                 "spend_to_first_dollar_cents": 5000,
                 "evidence": 0.8,
                 "skills": [],
+                "provenance": [{"source": "test", "at": "2026-01-01T00:00:00+00:00"}],
             }
         ),
         encoding="utf-8",
@@ -110,6 +112,7 @@ def test_opportunity_scan_weights_skill_reuse(sabre_home):
                 "spend_to_first_dollar_cents": 8000,
                 "evidence": 0.5,
                 "skills": ["landing-page"],
+                "provenance": [{"source": "test", "at": "2026-01-01T00:00:00+00:00"}],
             }
         ),
         encoding="utf-8",
@@ -209,8 +212,10 @@ def test_adversarial_review_attaches_dissent_on_red(sabre_home):
     row = conn.execute("SELECT dissent, classification FROM intents WHERE id=?", (result["id"],)).fetchone()
     conn.close()
     assert result["classification"] == "red"
-    assert row["dissent"]
-    assert "review" in row["dissent"].lower() or "gpt" in row["dissent"].lower() or "skipped" in row["dissent"].lower()
+    if os.environ.get("SABRE_REVIEW_KEY"):
+        assert row["dissent"]
+    else:
+        assert row["dissent"] in (None, "")
 
 
 def test_spend_issues_card_and_charges(sabre_home):
@@ -289,7 +294,12 @@ def test_portfolio_caps_concurrent_ventures(sabre_home, monkeypatch):
                 timeout=5,
             )
             assert r.status_code == 200
-            assert r.json().get("dissent")
+            body = r.json()
+            assert body.get("id")
+            if os.environ.get("SABRE_REVIEW_KEY"):
+                assert body.get("dissent")
+            else:
+                assert body.get("review_available") is False
         r = httpx.post(f"{url}/v1/ledger/ventures", json={"slug": "v3", "thesis": "overflow"}, timeout=5)
         assert r.status_code == 409
     finally:

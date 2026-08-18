@@ -20,6 +20,16 @@ def score_candidate(candidate: dict[str, Any], promoted_skills: set[str]) -> flo
     return evidence * 40.0 + reuse * 30.0 + max(0.0, 21.0 - ttfd) + max(0.0, 10.0 - spend / 10_000.0)
 
 
+def _provenance_ok(data: dict[str, Any]) -> bool:
+    prov = data.get("provenance")
+    if not isinstance(prov, list) or not prov:
+        return False
+    for item in prov:
+        if isinstance(item, dict) and item.get("source") and item.get("at"):
+            return True
+    return False
+
+
 def scan(paths: Paths, promoted_skills: set[str] | None = None) -> dict[str, Any]:
     dest = paths.work / SCAN_DIR
     dest.mkdir(parents=True, exist_ok=True)
@@ -33,6 +43,8 @@ def scan(paths: Paths, promoted_skills: set[str] | None = None) -> dict[str, Any
         except (OSError, json.JSONDecodeError):
             continue
         if not isinstance(data, dict):
+            continue
+        if not _provenance_ok(data):
             continue
         data["score"] = round(score_candidate(data, promoted), 2)
         ranked.append(data)

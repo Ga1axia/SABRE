@@ -65,10 +65,12 @@ def submit_intent(settings: Settings, conn: sqlite3.Connection, body: dict[str, 
         no_spend=settings.no_spend,
         hosting_enabled=settings.driver_enabled("hosting"),
     )
+    review = None
     if result.classification in {"amber", "red"}:
         from core.gate.review import review_intent
 
-        body["dissent"] = review_intent(settings, body, result.classification)
+        review = review_intent(settings, body, result.classification)
+        body["dissent"] = review.dissent or None
     hold_until = None
     if result.classification == "red":
         hold_until = later(settings.red_expire_days * 86400)
@@ -114,10 +116,15 @@ def submit_intent(settings: Settings, conn: sqlite3.Connection, body: dict[str, 
         "UPDATE intents SET state=?, classification=?, hold_until=? WHERE id=?",
         (state, result.classification, hold_until, iid),
     )
+    if result.classification in {"amber", "red"} and review is not None:
+        from core.gate.approvals import post_approval
+
+        post_approval(settings, iid, body, result.classification, review, hold_until=hold_until)
     return {
         "id": iid,
         "classification": result.classification,
         "state": state,
         "reasons": result.reasons,
         "hold_until": hold_until,
+        "review_available": review.available if review else None,
     }

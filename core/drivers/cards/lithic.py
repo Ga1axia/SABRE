@@ -9,8 +9,8 @@ from typing import Any
 from core.db import utcnow
 from core.drivers import Balance, Card, Charge
 from core.drivers.cards.lithic_client import LithicClient, LithicDeclined
-from core.drivers.cards.registry import remember
 from core.errors import SabreError
+from core.gate.card_secrets import resolve_card_pan, store_card_pan
 from core.ids import new_id
 from core.paths import Paths, default_home
 
@@ -22,7 +22,7 @@ class LithicCardDriver:
         self._client = LithicClient(api_key, base_url=base_url)
         home = Path(sabre_home) if sabre_home else default_home()
         self._paths = Paths(home)
-        self._index_path = self._paths.runtime / "lithic-cards.json"
+        self._index_path = self._paths.secrets / "lithic-index.json"
         self._cards: dict[str, dict[str, Any]] = self._load_index()
 
     def issue(self, venture: str, limit_cents: int) -> Card:
@@ -34,11 +34,10 @@ class LithicCardDriver:
         cid = new_id("CARD")
         provider_ref = f"lithic:{token}"
         card = Card(id=cid, provider_ref=provider_ref, limit_cents=int(limit_cents))
-        remember(card)
+        store_card_pan(self._paths, cid, pan)
         self._cards[cid] = {
             "venture": venture,
             "token": token,
-            "pan": pan,
             "limit_cents": int(limit_cents),
             "issued_at": utcnow(),
         }
@@ -54,7 +53,10 @@ class LithicCardDriver:
         merchant: str = "SABRE",
     ) -> Charge:
         meta = self._resolve(card_id, provider_ref)
-        result = self._client.simulate_authorize(pan=meta["pan"], amount_cents=int(amount_cents), descriptor=merchant)
+        pan = resolve_card_pan(self._paths, card_id)
+        if not pan:
+            raise SabreError(f"PAN missing for card {card_id}", remedy="re-issue card via gate spend")
+        result = self._client.simulate_authorize(pan=pan, amount_cents=int(amount_cents), descriptor=merchant)
         ext_id = str(result.get("token") or result.get("transaction_token") or new_id("LT"))
         occurred = str(result.get("created") or utcnow())
         return Charge(id=ext_id, amount_cents=int(amount_cents), occurred_at=occurred, card_id=card_id)
@@ -111,7 +113,7 @@ class LithicCardDriver:
             return {}
 
     def _save_index(self) -> None:
-        self._paths.runtime.mkdir(parents=True, exist_ok=True)
+        self._paths.secrets.mkdir(parents=True, exist_ok=True)
         self._index_path.write_text(json.dumps(self._cards, indent=2) + "\n", encoding="utf-8")
 
 

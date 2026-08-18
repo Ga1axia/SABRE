@@ -160,7 +160,7 @@ def make_handler(settings: Settings):
                     if concurrent_ventures(conn) >= max_v:
                         self._send(409, {"error": "portfolio full; kill a venture first"})
                         return
-                    dissent = review_intent(
+                    review = review_intent(
                         settings,
                         {"kind": "venture_launch", "rationale": body.get("thesis") or "", "payload": body},
                         "red",
@@ -184,7 +184,7 @@ def make_handler(settings: Settings):
                         ),
                     )
                     conn.commit()
-                    self._send(200, {"id": vid, "slug": body["slug"], "dissent": dissent})
+                    self._send(200, {"id": vid, "slug": body["slug"], "dissent": review.dissent, "review_available": review.available})
                     return
                 if path.startswith("/v1/ledger/ventures/") and method == "PATCH":
                     slug = path.rsplit("/", 1)[-1]

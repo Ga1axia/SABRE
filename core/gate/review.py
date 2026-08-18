@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,13 @@ from core.config import Settings
 from core.paths import core_dir
 
 
-def review_intent(settings: Settings, intent: dict[str, Any], klass: str) -> str:
+@dataclass(frozen=True)
+class ReviewResult:
+    dissent: str
+    available: bool
+
+
+def review_intent(settings: Settings, intent: dict[str, Any], klass: str) -> ReviewResult:
     inf = settings.drivers.get("inference") or {}
     review_model = str(inf.get("model_review") or "gpt-4.1-mini")
     core_model = str(inf.get("model_core") or "gpt-4.1")
@@ -18,16 +25,11 @@ def review_intent(settings: Settings, intent: dict[str, Any], klass: str) -> str
     review_base = os.environ.get("SABRE_REVIEW_BASE_URL") or ""
     core_base = os.environ.get("SABRE_INFERENCE_BASE_URL") or ""
     if not review_key:
-        if os.environ.get("SABRE_SKIP_LIVE") == "1":
-            return f"review skipped: configure SABRE_REVIEW_KEY for live adversarial review ({klass} {intent.get('kind')})"
-        return "review unavailable: SABRE_REVIEW_KEY missing"
+        return ReviewResult(dissent="", available=False)
     if review_base and core_base and review_base.rstrip("/") == core_base.rstrip("/") and review_key == (
         os.environ.get("SABRE_INFERENCE_KEY") or os.environ.get("OPENAI_API_KEY") or ""
     ):
-        return (
-            f"review misconfigured: review provider must differ from core "
-            f"({review_model} vs {core_model})"
-        )
+        return ReviewResult(dissent="", available=False)
     persona = _load_persona()
     prompt = (
         f"{persona}\n\n"
@@ -40,9 +42,9 @@ def review_intent(settings: Settings, intent: dict[str, Any], klass: str) -> str
         driver = OpenAICompatDriver(api_key=review_key, base_url=review_base or None)
         completion = driver.complete([{"role": "user", "content": prompt}], review_model)
         text = (completion.text or "").strip()
-        return text or f"empty dissent from {review_model}"
-    except Exception as exc:  # noqa: BLE001
-        return f"review unavailable ({review_model}): {exc}"
+        return ReviewResult(dissent=text or f"empty dissent from {review_model}", available=True)
+    except Exception:  # noqa: BLE001
+        return ReviewResult(dissent="", available=False)
 
 
 def _load_persona() -> str:

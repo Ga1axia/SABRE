@@ -13,20 +13,29 @@ from core.gate.reconcile import reconcile
 from core.hooks.ingest import ingest_payment
 
 
-def test_stripe_internal_payer_detects_sabre_issued_metadata():
-    reset()
+def test_stripe_internal_payer_uses_registry_not_metadata(sabre_home):
     cards = MemoryCardDriver()
     card = cards.issue("geo-audit", 10_000)
     pay = StripePaymentDriver(secret_key="sk_test_x")
+    conn = connect(sabre_home.db)
+    conn.execute(
+        """INSERT INTO cards(id, venture_id, provider_ref, limit_cents, spent_cents, status, issued_at)
+           VALUES (?,?,?,?,?,?,?)""",
+        (card.id, None, card.provider_ref, card.limit_cents, 0, "active", utcnow()),
+    )
+    conn.commit()
+    conn.close()
+    from core.gate.issued_registry import is_internal_charge
+
     charge = Charge(
         id="ch_int",
         amount_cents=500,
         occurred_at="t",
-        payer_ref=f"lithic:tok",
+        payer_ref="forged-payer",
         card_id=card.id,
     )
-    charge.metadata = {"sabre_issued": "true", "sabre_card_id": card.id}  # type: ignore[attr-defined]
-    assert pay.is_internal_payer(charge) is True
+    charge.metadata = {"sabre_issued": "false", "sabre_card_id": "CARD-FAKE"}  # type: ignore[attr-defined]
+    assert is_internal_charge(sabre_home, charge) is True
 
 
 def test_stripe_sabre_card_payment_not_revenue(sabre_home):
@@ -34,6 +43,14 @@ def test_stripe_sabre_card_payment_not_revenue(sabre_home):
     cards = MemoryCardDriver()
     pay = StripePaymentDriver(secret_key="sk_test_x")
     card = cards.issue("geo-audit", 10_000)
+    conn = connect(sabre_home.db)
+    conn.execute(
+        """INSERT INTO cards(id, venture_id, provider_ref, limit_cents, spent_cents, status, issued_at)
+           VALUES (?,?,?,?,?,?,?)""",
+        (card.id, None, card.provider_ref, card.limit_cents, 0, "active", utcnow()),
+    )
+    conn.commit()
+    conn.close()
     from core.drivers import Event
 
     payload = {

@@ -33,13 +33,13 @@ def _debits(conn: sqlite3.Connection) -> dict[str, int]:
     return out
 
 
-def _external_ids(conn: sqlite3.Connection, *, direction: str, category: str | None = None) -> set[str]:
-    sql = "SELECT external_id FROM transactions WHERE direction=? AND external_id IS NOT NULL"
-    args: list[Any] = [direction]
-    if category:
-        sql += " AND category=?"
-        args.append(category)
-    return {row[0] for row in conn.execute(sql, args) if row[0]}
+def _credits(conn: sqlite3.Connection) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for row in conn.execute(
+        "SELECT external_id, amount_cents FROM transactions WHERE direction='credit' AND external_id IS NOT NULL"
+    ):
+        out[str(row[0])] = int(row[1])
+    return out
 
 
 def reconcile(drivers: dict, conn: sqlite3.Connection, *, paths: Paths | None = None, since: str = "") -> dict:
@@ -95,9 +95,13 @@ def reconcile(drivers: dict, conn: sqlite3.Connection, *, paths: Paths | None = 
             for refund in payments.refunds(since):
                 apply_refund(conn, refund, source="reconcile")
                 applied_refunds += 1
-            ledger_credits = _external_ids(conn, direction="credit", category="revenue")
+            ledger_credits = _credits(conn)
+            provider_ids: set[str] = set()
             for charge in payments.list_charges(since):
-                if charge.id and charge.id not in ledger_credits and abs(int(charge.amount_cents)) > tolerance:
+                if not charge.id:
+                    continue
+                provider_ids.add(charge.id)
+                if charge.id not in ledger_credits and abs(int(charge.amount_cents)) > tolerance:
                     divergences.append(
                         {
                             "kind": "payment_missing_in_ledger",
@@ -105,6 +109,21 @@ def reconcile(drivers: dict, conn: sqlite3.Connection, *, paths: Paths | None = 
                             "amount_cents": charge.amount_cents,
                         }
                     )
+                elif (
+                    charge.id in ledger_credits
+                    and abs(int(charge.amount_cents) - ledger_credits[charge.id]) > tolerance
+                ):
+                    divergences.append(
+                        {
+                            "kind": "payment_amount_mismatch",
+                            "external_id": charge.id,
+                            "amount_cents": charge.amount_cents,
+                            "ledger_cents": ledger_credits[charge.id],
+                        }
+                    )
+            for eid in set(ledger_credits) - provider_ids:
+                if eid and ledger_credits.get(eid, 0) > tolerance:
+                    divergences.append({"kind": "ledger_credit_absent_at_provider", "external_id": eid})
         except CapabilityDisabled:
             skipped.append("payments")
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from core.db import connect, utcnow
 from core.drivers import Charge, Event, Refund
+from core.gate.issued_registry import is_internal_charge
 from core.gate.refunds import apply_refund
 from core.ids import new_id
 from core.paths import Paths
@@ -35,7 +36,7 @@ def ingest_payment(paths: Paths, driver, event: Event) -> str:
         payer_ref=str(payload.get("payer_ref") or ""),
         card_id=str(payload.get("card_id") or ""),
     )
-    if driver.is_internal_payer(charge):
+    if is_internal_charge(paths, charge):
         return "ignored"
     conn = connect(paths.db)
     try:

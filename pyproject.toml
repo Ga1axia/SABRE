@@ -76,3 +76,6 @@ select = ["E", "F", "I", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "stage_h: POSIX-only or target-platform tests deferred to Stage H",
+]

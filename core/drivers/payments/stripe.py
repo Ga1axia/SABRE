@@ -12,7 +12,6 @@ from collections.abc import Mapping
 import httpx
 
 from core.drivers import Charge, Event, Refund
-from core.drivers.cards.registry import is_issued
 from core.errors import CapabilityDisabled, SabreError
 
 
@@ -61,20 +60,10 @@ class StripePaymentDriver:
         return []
 
     def is_internal_payer(self, charge: Charge) -> bool:
-        meta = getattr(charge, "metadata", None)
-        if isinstance(meta, dict):
-            if meta.get("sabre_issued") in {True, "true", "1", 1}:
-                return True
-            if meta.get("sabre_card_id") and is_issued(str(meta["sabre_card_id"])):
-                return True
-            if meta.get("lithic_token") and is_issued(f"lithic:{meta['lithic_token']}"):
-                return True
-        if is_issued(charge.card_id) or is_issued(charge.payer_ref):
-            return True
-        payer = charge.payer_ref or ""
-        if payer.startswith("lithic:") and is_issued(payer):
-            return True
-        return False
+        """Legacy hook for tests with in-memory drivers. Production uses gate issued_registry."""
+        from core.drivers.cards.registry import is_issued
+
+        return is_issued(charge.card_id) or is_issued(charge.payer_ref)
 
     def _charge_from_stripe(self, obj: dict) -> Charge:
         meta = obj.get("metadata") if isinstance(obj.get("metadata"), dict) else {}
