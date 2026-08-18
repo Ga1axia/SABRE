@@ -28,6 +28,7 @@ def test_launch_argv_binds_isolated_profile(sabre_home):
     assert str(sabre_home.browser_profile.resolve()) in flag
     operator = Path.home() / "AppData/Local/Google/Chrome/User Data"
     assert udd.resolve() != operator.resolve()
+    assert udd.resolve() == (sabre_home.home / "hermes" / "chrome-debug").resolve()
 
 
 def test_doctor_fails_if_user_data_dir_points_elsewhere(sabre_home, tmp_path):
@@ -86,3 +87,23 @@ def test_load_page_reports_content_from_isolated_profile(sabre_home):
         assert planned.resolve() == sabre_home.browser_profile.resolve()
     finally:
         httpd.shutdown()
+
+
+def test_doctor_fails_on_foreign_cdp_url_then_passes_when_unset(sabre_home):
+    import yaml
+
+    from core.runtime.hermes import hermes_home, write_hermes_layout
+    from core.setup.checks import check_browser_cdp_url
+
+    write_hermes_layout(sabre_home, load_settings(sabre_home))
+    path = hermes_home(sabre_home) / "config.yaml"
+    cfg = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    cfg.setdefault("browser", {})["cdp_url"] = "http://127.0.0.1:9222"
+    path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
+    ok, msg = check_browser_cdp_url(sabre_home, load_settings(sabre_home))
+    assert ok is False
+    assert "9222" in msg or "foreign" in msg.lower() or "cdp" in msg.lower()
+
+    write_hermes_layout(sabre_home, load_settings(sabre_home))
+    ok, msg = check_browser_cdp_url(sabre_home, load_settings(sabre_home))
+    assert ok is True, msg

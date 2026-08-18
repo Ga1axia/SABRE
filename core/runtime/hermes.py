@@ -15,6 +15,7 @@ import yaml
 
 from core.config import Settings, load_settings
 from core.paths import Paths, repo_root
+from core.runtime.hermes_jobs import write_cron_jobs
 
 SOUL_MARKER = "<!-- sabre-managed -->"
 
@@ -26,6 +27,7 @@ class HermesLayout:
     config_path: Path
     soul_path: Path
     allowlist_path: Path
+    jobs_path: Path
 
 
 def hermes_home(paths: Paths) -> Path:
@@ -68,16 +70,19 @@ def write_hermes_layout(paths: Paths, settings: Settings | None = None) -> Herme
     settings = settings or load_settings(paths)
     home = hermes_home(paths)
     home.mkdir(parents=True, exist_ok=True)
+    (home / "chrome-debug").mkdir(parents=True, exist_ok=True)
     env_path = _write_env(paths, home)
     cfg_path = _write_config(paths, settings, home)
     soul_path = _write_soul(paths, home)
     allow_path = _write_allowlist(home)
+    jobs_file = write_cron_jobs(home, paths)
     return HermesLayout(
         home=home,
         env_path=env_path,
         config_path=cfg_path,
         soul_path=soul_path,
         allowlist_path=allow_path,
+        jobs_path=jobs_file,
     )
 
 
@@ -168,17 +173,17 @@ def _write_config(paths: Paths, settings: Settings, home: Path) -> Path:
             ],
         },
         "hooks_auto_accept": True,
+        # Hermes has no user_data_dir key. headed=false is the real headless switch.
+        # Jobs are written to cron/jobs.json, not under config.yaml cron:.
+        # chrome-debug is Hermes's hardcoded CDP profile; SABRE uses that path only.
         "browser": {
-            "user_data_dir": str(paths.browser_profile),
-            "headless": True,
+            "headed": False,
+            "cdp_url": "",
+            "allow_private_urls": False,
+            "allow_unsafe_evaluate": False,
+            "restrict_evaluate": True,
+            "dialog_policy": "must_respond",
         },
-        "cron": [
-            {"name": "main-loop", "schedule": "*/30 * * * *", "command": f"{shlex.quote(py)} -m core.loop tick"},
-            {"name": "opportunity-scan", "schedule": "0 6 * * *", "command": f"{shlex.quote(py)} -m core.loop scan"},
-            {"name": "kill-sweep", "schedule": "0 9 * * *", "command": f"{shlex.quote(py)} -m core.loop kill"},
-            {"name": "reconcile", "schedule": "0 2 * * *", "command": f"{shlex.quote(py)} -m core.loop reconcile"},
-            {"name": "promote", "schedule": "0 8 * * 1", "command": f"{shlex.quote(py)} -m core.loop promote"},
-        ],
     }
     if base:
         cfg["model"]["base_url"] = base

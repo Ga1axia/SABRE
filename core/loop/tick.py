@@ -46,3 +46,29 @@ def promote(paths: Paths) -> dict[str, Any]:
 
 def reconcile_job(paths: Paths) -> dict[str, Any]:
     return gate_post(paths, "/v1/loop/reconcile", {})
+
+
+def heartbeat(paths: Paths) -> dict[str, Any]:
+    return gate_post(paths, "/v1/heartbeat", {"service": "cron"})
+
+
+def status_digest(paths: Paths) -> dict[str, Any]:
+    envelopes = gate_get(paths, "/v1/ledger/envelopes")
+    ventures = gate_get(paths, "/v1/ledger/ventures")
+    if envelopes.get("error"):
+        return {"ok": False, "error": envelopes.get("error")}
+    if ventures.get("error"):
+        return {"ok": False, "error": ventures.get("error")}
+    rows = ventures.get("ventures") or []
+    active = [v for v in rows if str(v.get("status") or "") not in {"killed", "closed"}]
+    env = envelopes.get("envelopes") or {}
+    spend = env.get("spend") or {}
+    text = (
+        f"SABRE digest: {len(active)} active ventures of {len(rows)}; "
+        f"no_spend={envelopes.get('no_spend')}; "
+        f"daily_max={spend.get('daily_max')}; monthly_max={spend.get('monthly_max')}."
+    )
+    from core.watch.alert import alert
+
+    posted = alert(paths, text, "status")
+    return {"ok": True, "posted": posted, "ventures": len(rows), "active": len(active)}

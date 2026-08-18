@@ -172,7 +172,7 @@ def cookie_count(profile: Path) -> int:
             if path.stat().st_size > 8192:
                 raise SabreError(
                     f"cookie jar unreadable at {path}",
-                    remedy="delete SABRE browser-profile and re-run setup",
+                    remedy="delete HERMES_HOME/chrome-debug and re-run setup",
                 ) from None
     if not found:
         return 0

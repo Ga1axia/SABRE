@@ -1,0 +1,1128 @@
+{
+  "hermes_version": "0.20.1",
+  "source": "hermes_cli.config_defaults.DEFAULT_CONFIG + hermes_cli.config extras from local install",
+  "defaults": {
+    "model": null,
+    "providers": {},
+    "fallback_providers": null,
+    "credential_pool_strategies": {},
+    "toolsets": null,
+    "database": {
+      "journal_mode": null,
+      "wal_autocheckpoint": null,
+      "journal_size_limit": null
+    },
+    "runtime": {
+      "nofile_soft_limit": null
+    },
+    "max_concurrent_sessions": null,
+    "max_live_sessions": null,
+    "agent": {
+      "max_turns": null,
+      "gateway_timeout": null,
+      "gateway_turn_lease_timeout": null,
+      "agent_cache": {
+        "max_size": null,
+        "idle_ttl_secs": null,
+        "memory_high_mb": null,
+        "max_evictions_per_pass": null,
+        "protect_recent": null
+      },
+      "restart_drain_timeout": null,
+      "cron_drain_timeout": null,
+      "restart_after_turn_timeout": null,
+      "build_wait_timeout": null,
+      "api_max_retries": null,
+      "service_tier": null,
+      "tool_use_enforcement": null,
+      "intent_ack_continuation": null,
+      "task_completion_guidance": null,
+      "parallel_tool_call_guidance": null,
+      "environment_probe": null,
+      "environment_hint": null,
+      "coding_context": null,
+      "coding_instructions": null,
+      "verify_guidance": null,
+      "max_verify_nudges": null,
+      "verify_on_stop": null,
+      "gateway_timeout_warning": null,
+      "clarify_timeout": null,
+      "gateway_notify_interval": null,
+      "session_stall_timeout": null,
+      "reconnect_attention_after": null,
+      "gateway_auto_continue_freshness": null,
+      "gateway_startup_restore_drain_timeout": null,
+      "local_stream_stale_timeout": null,
+      "image_input_mode": null,
+      "disabled_toolsets": null,
+      "reasoning_overrides": {}
+    },
+    "terminal": {
+      "backend": null,
+      "modal_mode": null,
+      "degraded_mode": null,
+      "cwd": null,
+      "font_family": null,
+      "timeout": null,
+      "daemon_term_grace_seconds": null,
+      "env_passthrough": null,
+      "home_mode": null,
+      "shell_init_files": null,
+      "auto_source_bashrc": null,
+      "docker_image": null,
+      "docker_forward_env": null,
+      "docker_env": {},
+      "singularity_image": null,
+      "modal_image": null,
+      "daytona_image": null,
+      "vercel_runtime": null,
+      "container_cpu": null,
+      "container_memory": null,
+      "container_disk": null,
+      "container_persistent": null,
+      "docker_volumes": null,
+      "docker_mount_cwd_to_workspace": null,
+      "docker_network": null,
+      "docker_extra_args": null,
+      "docker_shm_size": null,
+      "docker_run_as_host_user": null,
+      "persistent_shell": null
+    },
+    "web": {
+      "backend": null,
+      "search_backend": null,
+      "extract_backend": null,
+      "extract_char_limit": null
+    },
+    "browser": {
+      "backend": null,
+      "inactivity_timeout": null,
+      "command_timeout": null,
+      "record_sessions": null,
+      "headed": null,
+      "allow_private_urls": null,
+      "engine": null,
+      "auto_local_for_private_urls": null,
+      "cdp_url": null,
+      "allow_unsafe_evaluate": null,
+      "restrict_evaluate": null,
+      "dialog_policy": null,
+      "dialog_timeout_s": null,
+      "camofox": {
+        "managed_persistence": null,
+        "user_id": null,
+        "session_key": null,
+        "adopt_existing_tab": null,
+        "rewrite_loopback_urls": null,
+        "loopback_host_alias": null
+      }
+    },
+    "checkpoints": {
+      "enabled": null,
+      "max_snapshots": null,
+      "max_total_size_mb": null,
+      "max_file_size_mb": null,
+      "auto_prune": null,
+      "retention_days": null,
+      "min_interval_hours": null
+    },
+    "context_file_max_chars": null,
+    "file_read_max_chars": null,
+    "mcp_discovery_timeout": null,
+    "mcp_single_query_discovery_timeout": null,
+    "mcp": {
+      "auto_reload_on_config_change": null
+    },
+    "tool_output": {
+      "max_bytes": null,
+      "max_lines": null,
+      "max_line_length": null
+    },
+    "tool_loop_guardrails": {
+      "warnings_enabled": null,
+      "hard_stop_enabled": null,
+      "warn_after": {
+        "exact_failure": null,
+        "same_tool_failure": null,
+        "idempotent_no_progress": null
+      },
+      "hard_stop_after": {
+        "exact_failure": null,
+        "same_tool_failure": null,
+        "idempotent_no_progress": null
+      },
+      "loop_caps": {
+        "max_web_searches": null,
+        "max_subagents": null
+      }
+    },
+    "compression": {
+      "enabled": null,
+      "progress_notices": null,
+      "threshold": null,
+      "threshold_tokens": null,
+      "target_ratio": null,
+      "protect_last_n": null,
+      "min_tail_user_messages": null,
+      "max_attempts": null,
+      "proactive_prune_tokens": null,
+      "proactive_prune_min_result_chars": null,
+      "proactive_prune_min_reclaim_tokens": null,
+      "micro_compact": null,
+      "micro_compact_every_n_turns": null,
+      "micro_compact_defrag_threshold_tokens": null,
+      "hygiene_hard_message_limit": null,
+      "hygiene_timeout_seconds": null,
+      "hygiene_total_ceiling_seconds": null,
+      "hygiene_failure_cooldown_seconds": null,
+      "context_timeout_seconds": null,
+      "context_total_ceiling_seconds": null,
+      "protect_first_n": null,
+      "abort_on_summary_failure": null,
+      "codex_gpt55_autoraise": null,
+      "codex_gpt55_autoraise_notice": null,
+      "codex_app_server_auto": null,
+      "codex_responses_native": null,
+      "codex_responses_compact_threshold": null,
+      "in_place": null,
+      "model_thresholds": {},
+      "idle_compact_after_seconds": null
+    },
+    "prompt_caching": {
+      "cache_ttl": null
+    },
+    "openrouter": {
+      "response_cache": null,
+      "response_cache_ttl": null,
+      "min_coding_score": null
+    },
+    "bedrock": {
+      "region": null,
+      "discovery": {
+        "enabled": null,
+        "provider_filter": null,
+        "refresh_interval": null
+      },
+      "guardrail": {
+        "guardrail_identifier": null,
+        "guardrail_version": null,
+        "stream_processing_mode": null,
+        "trace": null
+      }
+    },
+    "auxiliary": {
+      "transient_retries": null,
+      "free_only": null,
+      "openrouter_model": null,
+      "stream_only_base_urls": null,
+      "vision": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null,
+        "download_timeout": null
+      },
+      "web_extract": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "compression": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "skills_hub": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "approval": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "mcp": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "title_generation": {
+        "enabled": null,
+        "provider": null,
+        "model": null,
+        "prefer_fast_model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null,
+        "language": null
+      },
+      "memory_query_rewrite": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {}
+      },
+      "tts_audio_tags": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "triage_specifier": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "kanban_decomposer": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "profile_describer": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "goal_judge": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "curator": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "monitor": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "background_review": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {},
+        "reasoning_effort": null
+      },
+      "moa_reference": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {}
+      },
+      "moa_aggregator": {
+        "provider": null,
+        "model": null,
+        "base_url": null,
+        "api_key": null,
+        "timeout": null,
+        "extra_body": {}
+      }
+    },
+    "display": {
+      "compact": null,
+      "personality": null,
+      "resume_display": null,
+      "resume_exchanges": null,
+      "resume_max_user_chars": null,
+      "resume_max_assistant_chars": null,
+      "resume_max_assistant_lines": null,
+      "resume_skip_tool_only": null,
+      "busy_input_mode": null,
+      "busy_steer_ack_enabled": null,
+      "cli_multiline_shortcuts": null,
+      "interface": null,
+      "tui_auto_resume_recent": null,
+      "tui_agents_nudge": null,
+      "bell_on_complete": null,
+      "show_reasoning": null,
+      "reasoning_full": null,
+      "memory_notifications": null,
+      "background_process_notifications": null,
+      "streaming": null,
+      "timestamps": null,
+      "timestamp_format": null,
+      "final_response_markdown": null,
+      "persistent_output": null,
+      "persistent_output_max_lines": null,
+      "cli_rebuild_scrollback_on_redraw": null,
+      "persist_prompts": null,
+      "inline_diffs": null,
+      "file_mutation_verifier": null,
+      "credits_notices": null,
+      "turn_completion_explainer": null,
+      "show_cost": null,
+      "battery": null,
+      "focus_view": null,
+      "focus_saved_tool_progress": null,
+      "skin": null,
+      "language": null,
+      "tui_status_indicator": null,
+      "cli_refresh_interval": null,
+      "user_message_preview": {
+        "first_lines": null,
+        "last_lines": null
+      },
+      "interim_assistant_messages": null,
+      "show_commentary": null,
+      "tool_progress_command": null,
+      "tool_preview_length": null,
+      "friendly_tool_labels": null,
+      "turn_summary": null,
+      "spinner_token_flow": null,
+      "tool_progress_grouping": null,
+      "status_phrases": {},
+      "reasoning_style": null,
+      "ephemeral_system_ttl": null,
+      "platforms": {
+        "telegram": {
+          "streaming": null
+        },
+        "discord": {
+          "streaming": null
+        },
+        "slack": {
+          "streaming": null
+        }
+      },
+      "runtime_footer": {
+        "enabled": null,
+        "fields": null
+      },
+      "copy_shortcut": null,
+      "pet": {
+        "enabled": null,
+        "slug": null,
+        "render_mode": null,
+        "scale": null,
+        "unicode_cols": null
+      }
+    },
+    "dashboard": {
+      "theme": null,
+      "turn_isolation": null,
+      "compute_host_heartbeat_secs": null,
+      "compute_host_respawn_max": null,
+      "show_token_analytics": null,
+      "oauth": {
+        "client_id": null,
+        "portal_url": null
+      },
+      "basic_auth": {
+        "username": null,
+        "password_hash": null,
+        "password": null,
+        "secret": null,
+        "session_ttl_seconds": null
+      },
+      "drain_auth": {
+        "scope": null,
+        "min_secret_chars": null
+      },
+      "public_url": null
+    },
+    "privacy": {
+      "redact_pii": null
+    },
+    "tts": {
+      "provider": null,
+      "edge": {
+        "voice": null
+      },
+      "elevenlabs": {
+        "voice_id": null,
+        "model_id": null
+      },
+      "openai": {
+        "model": null,
+        "voice": null
+      },
+      "gemini": {
+        "model": null,
+        "voice": null,
+        "audio_tags": null,
+        "persona_prompt_file": null
+      },
+      "xai": {
+        "voice_id": null,
+        "language": null,
+        "speed": null,
+        "auto_speech_tags": null,
+        "optimize_streaming_latency": null,
+        "sample_rate": null,
+        "bit_rate": null
+      },
+      "mistral": {
+        "model": null,
+        "voice_id": null
+      },
+      "minimax": {
+        "model": null,
+        "voice_id": null
+      },
+      "kittentts": {
+        "model": null,
+        "voice": null
+      },
+      "neutts": {
+        "ref_audio": null,
+        "ref_text": null,
+        "model": null,
+        "device": null
+      },
+      "piper": {
+        "voice": null
+      },
+      "deepinfra": {
+        "model": null,
+        "voice": null
+      }
+    },
+    "stt": {
+      "enabled": null,
+      "echo_transcripts": null,
+      "provider": null,
+      "language": null,
+      "cloud_trim_silence": null,
+      "cloud_trim_threshold_db": null,
+      "cloud_trim_keep_ms": null,
+      "local": {
+        "model": null,
+        "language": null,
+        "initial_prompt": null,
+        "vad": null,
+        "vad_min_silence_ms": null,
+        "no_speech_prob_threshold": null,
+        "logprob_threshold": null,
+        "unload_after_idle_seconds": null
+      },
+      "groq": {
+        "model": null,
+        "language": null
+      },
+      "openai": {
+        "model": null,
+        "language": null
+      },
+      "mistral": {
+        "model": null,
+        "language": null
+      },
+      "xai": {
+        "language": null
+      },
+      "elevenlabs": {
+        "model_id": null,
+        "language_code": null,
+        "tag_audio_events": null,
+        "diarize": null
+      },
+      "deepinfra": {
+        "model": null
+      }
+    },
+    "voice": {
+      "record_key": null,
+      "submit_mode": null,
+      "max_recording_seconds": null,
+      "auto_tts": null,
+      "beep_enabled": null,
+      "beep_volume": null,
+      "thinking_sound": null,
+      "silence_threshold": null,
+      "silence_duration": null,
+      "barge_in": null,
+      "barge_in_grace_seconds": null,
+      "barge_in_threshold_multiplier": null,
+      "stop_phrases": null
+    },
+    "wake_word": {
+      "enabled": null,
+      "surface": null,
+      "input_device": null,
+      "capture": null,
+      "provider": null,
+      "phrase": null,
+      "sensitivity": null,
+      "confirmation_frames": null,
+      "start_new_session": null,
+      "profile_routing": null,
+      "openwakeword": {
+        "model": null,
+        "inference_framework": null
+      },
+      "sherpa": {
+        "model_dir": null
+      },
+      "porcupine": {
+        "keyword": null
+      }
+    },
+    "human_delay": {
+      "mode": null,
+      "min_ms": null,
+      "max_ms": null
+    },
+    "context": {
+      "engine": null,
+      "memory_trim": {
+        "enabled": null,
+        "cooldown_seconds": null,
+        "log_every_n": null,
+        "info_log_min_delta_mb": null
+      }
+    },
+    "memory": {
+      "memory_enabled": null,
+      "user_profile_enabled": null,
+      "write_approval": null,
+      "memory_char_limit": null,
+      "user_char_limit": null,
+      "provider": null
+    },
+    "delegation": {
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "api_key": null,
+      "api_mode": null,
+      "inherit_mcp_toolsets": null,
+      "max_iterations": null,
+      "max_summary_chars": null,
+      "child_timeout_seconds": null,
+      "reasoning_effort": null,
+      "max_concurrent_children": null,
+      "max_spawn_depth": null,
+      "orchestrator_enabled": null,
+      "subagent_auto_approve": null
+    },
+    "prefill_messages_file": null,
+    "goals": {
+      "max_turns": null
+    },
+    "loops": {
+      "min_interval_seconds": null,
+      "max_ticks": null,
+      "self_paced_floor_seconds": null,
+      "self_paced_ceiling_seconds": null
+    },
+    "moa": {
+      "default_preset": null,
+      "active_preset": null,
+      "save_traces": null,
+      "trace_dir": null,
+      "privacy_filter": null,
+      "presets": {
+        "default": {
+          "reference_models": null,
+          "aggregator": {
+            "provider": null,
+            "model": null
+          },
+          "max_tokens": null,
+          "enabled": null
+        }
+      }
+    },
+    "skills": {
+      "external_dirs": null,
+      "template_vars": null,
+      "inline_shell": null,
+      "inline_shell_timeout": null,
+      "guard_agent_created": null,
+      "write_approval": null
+    },
+    "curator": {
+      "enabled": null,
+      "interval_hours": null,
+      "min_idle_hours": null,
+      "stale_after_days": null,
+      "archive_after_days": null,
+      "consolidate": null,
+      "prune_builtins": null,
+      "backup": {
+        "enabled": null,
+        "keep": null
+      }
+    },
+    "honcho": {},
+    "timezone": null,
+    "slack": {
+      "require_mention": null,
+      "free_response_channels": null,
+      "allowed_channels": null,
+      "require_mention_channels": null,
+      "ignore_other_user_mentions": null,
+      "thread_require_mention": null,
+      "channel_prompts": {}
+    },
+    "discord": {
+      "require_mention": null,
+      "free_response_channels": null,
+      "allowed_channels": null,
+      "auto_thread": null,
+      "thread_require_mention": null,
+      "bots_require_inline_mention": null,
+      "history_backfill": null,
+      "history_backfill_limit": null,
+      "missed_message_backfill": {
+        "enabled": null,
+        "channels": null,
+        "window_seconds": null,
+        "limit": null,
+        "max_dispatches": null
+      },
+      "reactions": null,
+      "websocket_liveness_interval_seconds": null,
+      "websocket_liveness_failure_threshold": null,
+      "websocket_heartbeat_ack_max_age_seconds": null,
+      "websocket_max_latency_seconds": null,
+      "channel_prompts": {},
+      "dm_role_auth_guild": null,
+      "server_actions": null,
+      "allow_any_attachment": null,
+      "max_attachment_bytes": null,
+      "approval_mentions": null,
+      "voice_channel_inactivity_timeout_seconds": null,
+      "voice_playback_timeout_seconds": null,
+      "voice_fx": {
+        "enabled": null,
+        "ambient_enabled": null,
+        "ambient_path": null,
+        "ambient_gain": null,
+        "duck_gain": null,
+        "speech_gain": null,
+        "ack_enabled": null,
+        "ack_phrases": null
+      }
+    },
+    "whatsapp": {},
+    "telegram": {
+      "reactions": null,
+      "channel_prompts": {},
+      "allowed_chats": null,
+      "extra": {
+        "rich_messages": null,
+        "rich_drafts": null
+      }
+    },
+    "mattermost": {
+      "require_mention": null,
+      "free_response_channels": null,
+      "allowed_channels": null,
+      "channel_prompts": {}
+    },
+    "matrix": {
+      "require_mention": null,
+      "free_response_rooms": null,
+      "allowed_rooms": null
+    },
+    "approvals": {
+      "mode": null,
+      "timeout": null,
+      "cron_mode": null,
+      "smart_policy": null,
+      "denial_breaker_threshold": null,
+      "deny": null,
+      "mcp_reload_confirm": null,
+      "destructive_slash_confirm": null
+    },
+    "command_allowlist": null,
+    "quick_commands": {},
+    "platform_hints": {},
+    "hooks": {},
+    "hooks_auto_accept": null,
+    "personalities": {},
+    "security": {
+      "allow_private_urls": null,
+      "redact_secrets": null,
+      "approval": {
+        "transport": null,
+        "transport_fallback": null
+      },
+      "protected_instruction_files": null,
+      "protected_instruction_extra_patterns": null,
+      "tirith_enabled": null,
+      "tirith_path": null,
+      "tirith_timeout": null,
+      "tirith_fail_open": null,
+      "website_blocklist": {
+        "enabled": null,
+        "domains": null,
+        "shared_files": null
+      },
+      "acked_advisories": null,
+      "allow_lazy_installs": null
+    },
+    "cron": {
+      "allow_agent_scheduling": null,
+      "preflight": null,
+      "model_drift_guard": null,
+      "model": null,
+      "model_provider": null,
+      "provider": null,
+      "chronos": {
+        "portal_url": null,
+        "callback_url": null,
+        "expected_audience": null,
+        "nas_jwks_url": null
+      },
+      "wrap_response": null,
+      "mirror_delivery": null,
+      "max_parallel_jobs": null,
+      "output_retention": null,
+      "script_timeout_seconds": null,
+      "session_db_timeout_seconds": null
+    },
+    "kanban": {
+      "auto_subscribe_on_create": null,
+      "dispatch_in_gateway": null,
+      "review_dispatch": null,
+      "dispatch_interval_seconds": null,
+      "failure_limit": null,
+      "worker_log_rotate_bytes": null,
+      "worker_log_backup_count": null,
+      "orchestrator_profile": null,
+      "default_assignee": null,
+      "max_in_progress_per_profile": null,
+      "auto_decompose": null,
+      "auto_decompose_per_tick": null,
+      "dispatch_stale_timeout_seconds": null,
+      "reconcile_orphans": null,
+      "done_sub_retention_days": null
+    },
+    "code_execution": {
+      "mode": null
+    },
+    "tools": {
+      "tool_search": {
+        "enabled": null,
+        "threshold_pct": null,
+        "search_default_limit": null,
+        "max_search_limit": null,
+        "listing": null,
+        "listing_max_tokens": null
+      }
+    },
+    "logging": {
+      "level": null,
+      "max_size_mb": null,
+      "backup_count": null
+    },
+    "model_catalog": {
+      "enabled": null,
+      "url": null,
+      "ttl_hours": null,
+      "providers": {}
+    },
+    "model_overrides": {},
+    "models_dev": {
+      "url": null
+    },
+    "network": {
+      "force_ipv4": null
+    },
+    "monitoring": {
+      "install_id": null,
+      "gateway_health_export": {
+        "enabled": null,
+        "metrics_enabled": null,
+        "diagnostic_events_enabled": null,
+        "warning_error_events_enabled": null,
+        "export_interval_seconds": null,
+        "logs_export_interval_seconds": null,
+        "resource_attributes": {
+          "service.name": null,
+          "deployment.environment.name": null
+        }
+      },
+      "export": {
+        "otlp": {
+          "enabled": null,
+          "endpoint": null,
+          "headers_env": {}
+        }
+      }
+    },
+    "gateway": {
+      "multiplex_profile_allowlist": null,
+      "delivery_ledger": null,
+      "platform_connect_timeout": null,
+      "loop_watchdog": null,
+      "write_sessions_json": null,
+      "scale_to_zero": {
+        "idle_timeout_minutes": null
+      },
+      "restart_loop_guard": {
+        "max_restarts": null,
+        "window_seconds": null,
+        "max_gap_seconds": null
+      },
+      "respawn_storm": {
+        "max_starts": null,
+        "window_seconds": null
+      },
+      "message_timestamps": {
+        "enabled": null
+      },
+      "max_inbound_media_bytes": null,
+      "strict": null,
+      "media_delivery_allow_dirs": null,
+      "trust_recent_files": null,
+      "trust_recent_files_seconds": null,
+      "api_server": {
+        "max_concurrent_runs": null
+      }
+    },
+    "streaming": {
+      "enabled": null,
+      "transport": null,
+      "edit_interval": null,
+      "buffer_threshold": null,
+      "cursor": null,
+      "fresh_final_after_seconds": null
+    },
+    "sessions": {
+      "auto_prune": null,
+      "retention_days": null,
+      "auto_archive": null,
+      "auto_archive_days": null,
+      "vacuum_after_prune": null,
+      "min_vacuum_interval_days": null,
+      "min_interval_hours": null,
+      "write_json_snapshots": null,
+      "fts_optimize_notice": null,
+      "cjk_fts": null,
+      "search_slow_ms": null,
+      "max_resume_messages": null,
+      "max_export_messages": null
+    },
+    "onboarding": {
+      "seen": {},
+      "profile_build": null
+    },
+    "telemetry": {
+      "shared_metrics": {
+        "enabled": null
+      }
+    },
+    "doctor": {
+      "live_probe_timeout": null
+    },
+    "updates": {
+      "pre_update_backup": null,
+      "backup_keep": null,
+      "non_interactive_local_changes": null,
+      "refresh_cua_driver": null
+    },
+    "lsp": {
+      "enabled": null,
+      "wait_mode": null,
+      "wait_timeout": null,
+      "install_strategy": null,
+      "idle_timeout": null,
+      "servers": {}
+    },
+    "x_search": {
+      "model": null,
+      "reasoning_effort": null,
+      "timeout_seconds": null,
+      "retries": null
+    },
+    "secrets": {
+      "bitwarden": {
+        "enabled": null,
+        "access_token_env": null,
+        "project_id": null,
+        "cache_ttl_seconds": null,
+        "encrypted_cache": {
+          "enabled": null,
+          "max_stale_seconds": null
+        },
+        "override_existing": null,
+        "auto_install": null,
+        "server_url": null
+      },
+      "onepassword": {
+        "enabled": null,
+        "env": {},
+        "account": null,
+        "service_account_token_env": null,
+        "binary_path": null,
+        "cache_ttl_seconds": null,
+        "override_existing": null
+      }
+    },
+    "paste_collapse_threshold": null,
+    "paste_collapse_threshold_fallback": null,
+    "paste_collapse_char_threshold": null,
+    "computer_use": {
+      "cua_telemetry": null,
+      "max_image_dimension": null,
+      "capture_after_mode": null,
+      "no_overlay": null
+    },
+    "proxy": {
+      "enabled": null,
+      "tunnel_port": null,
+      "auto_install": null,
+      "credential_source": null,
+      "enforce_on_docker": null,
+      "allow_env_fallback": null,
+      "upstream_deny_cidrs": null,
+      "extra_allowed_hosts": null
+    },
+    "desktop": {
+      "repo_scan_enabled": null,
+      "repo_scan_roots": null,
+      "repo_scan_exclude_paths": null,
+      "electron_flags": null,
+      "disable_gpu": null,
+      "password_store": null,
+      "macos_signing_identity": null,
+      "auto_continue": {
+        "enabled": null,
+        "freshness_minutes": null,
+        "max_attempts": null
+      }
+    },
+    "vertex": {
+      "project_id": null,
+      "region": null
+    },
+    "_config_version": null
+  },
+  "extra_roots": [
+    "always_log_local",
+    "custom_providers",
+    "fallback_model",
+    "filter_silence_narration",
+    "group_sessions_per_user",
+    "image_gen",
+    "known_builtin_toolsets",
+    "known_plugin_toolsets",
+    "mcp_servers",
+    "multiplex_profiles",
+    "platform_toolsets",
+    "platforms",
+    "plugins",
+    "profile_routes",
+    "require_mention",
+    "reset_triggers",
+    "session_reset",
+    "signal",
+    "smart_model_routing",
+    "stt_echo_transcripts",
+    "thread_sessions_per_user",
+    "timeouts",
+    "unauthorized_dm_behavior",
+    "video_gen"
+  ],
+  "open_dicts": [
+    "channel_prompts",
+    "command_allowlist",
+    "credential_pool_strategies",
+    "goals",
+    "hooks",
+    "loops",
+    "mcp_servers",
+    "model_catalog",
+    "personalities",
+    "providers",
+    "quick_commands",
+    "secrets",
+    "server_actions"
+  ],
+  "schema_defined_dicts": [
+    "bluebubbles",
+    "checkpoints",
+    "dingtalk",
+    "discord",
+    "email",
+    "feishu",
+    "matrix",
+    "mattermost",
+    "plugins",
+    "qqbot",
+    "sessions",
+    "signal",
+    "slack",
+    "sms",
+    "telegram",
+    "wecom",
+    "weixin",
+    "whatsapp",
+    "yuanbao"
+  ],
+  "model_object_keys": [
+    "default",
+    "provider",
+    "base_url",
+    "api_key",
+    "key_env",
+    "api_base",
+    "model",
+    "name",
+    "context_length"
+  ]
+}

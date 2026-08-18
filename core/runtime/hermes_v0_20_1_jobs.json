@@ -1,0 +1,110 @@
+{
+  "hermes_version": "0.20.1",
+  "source": "hermes-agent cron/jobs.py create_job() fields + _save_jobs_unlocked() wrapper from the local v0.20.1 install",
+  "file": {
+    "type": "object",
+    "required": ["jobs", "updated_at"],
+    "properties": {
+      "jobs": {"type": "array", "items": {"$ref": "#/job"}},
+      "updated_at": {"type": "string", "format": "isoformat"}
+    }
+  },
+  "job": {
+    "type": "object",
+    "required": [
+      "id",
+      "name",
+      "prompt",
+      "skills",
+      "skill",
+      "model",
+      "provider",
+      "provider_snapshot",
+      "model_snapshot",
+      "base_url",
+      "script",
+      "no_agent",
+      "monitor_script",
+      "monitor_url",
+      "monitor_state",
+      "context_from",
+      "schedule",
+      "schedule_display",
+      "repeat",
+      "enabled",
+      "state",
+      "paused_at",
+      "paused_reason",
+      "created_at",
+      "next_run_at",
+      "last_run_at",
+      "last_status",
+      "last_error",
+      "last_delivery_error",
+      "deliver",
+      "origin",
+      "enabled_toolsets",
+      "workdir"
+    ],
+    "properties": {
+      "id": {"type": "string"},
+      "name": {"type": "string"},
+      "prompt": {"type": "string"},
+      "skills": {"type": "array"},
+      "skill": {"type": ["string", "null"]},
+      "model": {"type": ["string", "null"]},
+      "provider": {"type": ["string", "null"]},
+      "provider_snapshot": {"type": ["object", "null"]},
+      "model_snapshot": {"type": ["object", "null"]},
+      "base_url": {"type": ["string", "null"]},
+      "script": {"type": ["string", "null"]},
+      "no_agent": {"type": "boolean"},
+      "monitor_script": {"type": ["string", "null"]},
+      "monitor_url": {"type": ["string", "null"]},
+      "monitor_state": {"type": ["object", "null"]},
+      "context_from": {"type": ["string", "null"]},
+      "schedule": {"$ref": "#/schedule"},
+      "schedule_display": {"type": "string"},
+      "repeat": {
+        "type": "object",
+        "required": ["times", "completed"],
+        "properties": {
+          "times": {"type": ["integer", "null"]},
+          "completed": {"type": "integer"}
+        }
+      },
+      "enabled": {"type": "boolean"},
+      "state": {"type": "string"},
+      "paused_at": {"type": ["string", "null"]},
+      "paused_reason": {"type": ["string", "null"]},
+      "created_at": {"type": ["string", "null"]},
+      "next_run_at": {"type": ["string", "null"]},
+      "last_run_at": {"type": ["string", "null"]},
+      "last_status": {"type": ["string", "null"]},
+      "last_error": {"type": ["string", "null"]},
+      "last_delivery_error": {"type": ["string", "null"]},
+      "deliver": {"type": ["string", "object", "null"]},
+      "origin": {"type": ["string", "null"]},
+      "enabled_toolsets": {"type": ["array", "null"]},
+      "workdir": {"type": ["string", "null"]},
+      "attach_to_session": {"type": ["string", "boolean", "null"]}
+    }
+  },
+  "schedule": {
+    "type": "object",
+    "required": ["kind"],
+    "kinds": ["once", "interval", "cron"],
+    "properties": {
+      "kind": {"type": "string"},
+      "display": {"type": "string"},
+      "minutes": {"type": "integer"},
+      "expr": {"type": "string"},
+      "run_at": {"type": "string"}
+    }
+  },
+  "rules": [
+    "no_agent true requires a non-empty script",
+    "scripts must live under HERMES_HOME/scripts/",
+    "config.yaml cron: is a settings mapping, never a job list"
+  ]
+}

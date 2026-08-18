@@ -1,4 +1,4 @@
-"""Cron entry: python -m core.loop <tick|scan|kill|promote|reconcile>"""
+"""Cron entry: python -m core.loop <tick|scan|kill|promote|reconcile|digest|heartbeat>"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 import sys
 
 from core.envfile import load_env
-from core.loop.tick import kill_sweep, promote, reconcile_job, scan, tick
+from core.loop.tick import heartbeat, kill_sweep, promote, reconcile_job, scan, status_digest, tick
 from core.paths import Paths, default_home
 
 
@@ -21,6 +21,8 @@ def main(argv: list[str] | None = None) -> int:
         "kill": kill_sweep,
         "promote": promote,
         "reconcile": reconcile_job,
+        "digest": status_digest,
+        "heartbeat": heartbeat,
     }
     fn = jobs.get(cmd)
     if fn is None:

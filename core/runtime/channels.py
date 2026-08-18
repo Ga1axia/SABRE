@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from typing import Any
 
 from core.paths import Paths, core_dir
@@ -45,22 +46,53 @@ def inject_text(slug: str) -> str:
 
 
 def resolve_slug(paths: Paths | None, payload: dict[str, Any], extra: dict[str, Any]) -> str:
-    raw = (
-        extra.get("channel")
-        or extra.get("channel_name")
-        or extra.get("channel_id")
-        or payload.get("channel")
-        or payload.get("channel_id")
-        or ""
-    )
-    token = str(raw).lstrip("#").strip()
-    if not token:
+    """Map Hermes session_id → Slack channel via HERMES_HOME/state.db sessions.chat_id.
+
+    Hook stdin has no channel field. extra.channel / channel_id / channel_name are
+    ignored even if present. Source: hermes_state.SessionDB sessions.chat_id
+    (written by record_gateway_session_peer).
+    """
+    del extra
+    if paths is None:
         return ""
+    session_id = str(payload.get("session_id") or "").strip()
+    chat_id = session_chat_id(paths, session_id)
+    if not chat_id:
+        return ""
+    token = chat_id.lstrip("#").strip()
     if token in REQUIRED:
         return token
     ids = _channel_ids(paths)
     inverted = {str(cid): slug for slug, cid in ids.items()}
-    return inverted.get(token, "")
+    return inverted.get(token, inverted.get(chat_id, ""))
+
+
+def session_chat_id(paths: Paths, session_id: str) -> str:
+    """Read sessions.chat_id from Hermes state.db. Empty if missing or unreadable."""
+    if not session_id:
+        return ""
+    from core.runtime.hermes import hermes_home
+
+    db = hermes_home(paths) / "state.db"
+    if not db.is_file():
+        return ""
+    try:
+        conn = sqlite3.connect(str(db), timeout=1.0)
+    except sqlite3.Error:
+        return ""
+    try:
+        try:
+            conn.execute("PRAGMA query_only=ON")
+        except sqlite3.Error:
+            pass
+        row = conn.execute("SELECT chat_id FROM sessions WHERE id = ?", (session_id,)).fetchone()
+    except sqlite3.Error:
+        return ""
+    finally:
+        conn.close()
+    if not row:
+        return ""
+    return str(row[0] or "").strip()
 
 
 def render_speech_act(slug: str, question: str) -> str:

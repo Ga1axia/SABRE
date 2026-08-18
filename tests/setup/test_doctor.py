@@ -8,6 +8,11 @@ def test_check_ids_stable():
     ids = [c["id"] for c in all_checks()]
     assert "isolation.home" in ids
     assert "runtime.hermes" in ids
+    assert "runtime.hermes.schema" in ids
+    assert "runtime.hermes.jobs" in ids
+    assert "runtime.hermes.cron-list" in ids
+    assert "runtime.hermes.version" in ids
+    assert "browser.cdp_url" in ids
     assert "browser.profile" in ids
     assert "gate.ceiling" in ids
     assert "gate.unknown" in ids

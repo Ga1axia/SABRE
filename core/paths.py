@@ -87,7 +87,7 @@ class Paths:
 
     @property
     def browser_profile(self) -> Path:
-        return self.home / "browser-profile"
+        return self.home / "hermes" / "chrome-debug"
 
     @property
     def proxy_store(self) -> Path:
