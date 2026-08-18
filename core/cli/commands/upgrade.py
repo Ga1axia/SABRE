@@ -7,7 +7,8 @@ from core.config import load_settings
 from core.db import apply_migrations, connect, init_schema
 from core.envfile import load_env
 from core.paths import Paths, default_home, repo_root
-from core.services.backup import create_backup
+from core.services.backup import create_backup, restore_backup
+from core.release.git_ops import checkout_ref, prior_rollback_ref
 from core.services.control import start_all, stop_all
 
 
@@ -25,6 +26,9 @@ def run(args: argparse.Namespace) -> int:
     print(f"pre-upgrade backup: {snapshot}")
     stop_all(settings)
     app = paths.app if (paths.app / ".git").exists() else repo_root()
+    rollback_ref = prior_rollback_ref(app) if (app / ".git").exists() else None
+    if rollback_ref:
+        print(f"rollback floor: {rollback_ref}")
     if (app / ".git").exists():
         ref = args.ref or "main"
         subprocess.run(["git", "-C", str(app), "fetch"], check=False)
@@ -45,12 +49,25 @@ def run(args: argparse.Namespace) -> int:
         report = run_doctor(paths)
         print(report.format())
         if not report.ok:
-            print("doctor failed after upgrade; restore the snapshot if needed:")
-            print(f"  sabre restore {snapshot}")
+            if rollback_ref and (app / ".git").exists():
+                checkout_ref(app, rollback_ref)
+                print(f"git rolled back to {rollback_ref}")
+            restore_backup(paths, str(snapshot))
+            print("restored pre-upgrade snapshot")
             return 1
         start_all(settings)
         return 0
     except Exception as exc:  # noqa: BLE001
         print(f"upgrade failed: {exc}")
-        print(f"  sabre restore {snapshot}")
+        if rollback_ref and (app / ".git").exists():
+            try:
+                checkout_ref(app, rollback_ref)
+                print(f"git rolled back to {rollback_ref}")
+            except Exception as rb_exc:  # noqa: BLE001
+                print(f"git rollback failed: {rb_exc}")
+        try:
+            restore_backup(paths, str(snapshot))
+            print("restored pre-upgrade snapshot")
+        except Exception as rs_exc:  # noqa: BLE001
+            print(f"snapshot restore failed: {rs_exc}")
         return 1

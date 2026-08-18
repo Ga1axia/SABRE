@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
 
+import pytest
 import yaml
 
 from core.config import load_settings
@@ -26,16 +27,20 @@ def _start_gate(sabre_home):
     return httpd, f"http://127.0.0.1:{port}"
 
 
-def test_agent_source_has_no_chat_completions_loop():
-    src = Path(__file__).resolve().parents[2] / "core" / "runtime" / "agent.py"
-    text = src.read_text(encoding="utf-8")
-    assert "OpenAICompatDriver" not in text
-    assert "complete_turn" not in text
-    assert "slack_bolt" not in text
-    assert "SocketModeHandler" not in text
-    assert "chat/completions" not in text
-    assert "gateway" in text
-    assert "hermes" in text.lower()
+def test_agent_launches_hermes_gateway_not_inline_llm(sabre_home, monkeypatch):
+    from core.runtime import agent
+
+    calls: list[list[str]] = []
+    monkeypatch.setattr(agent, "resolve_hermes_bin", lambda: "/fake/hermes")
+    monkeypatch.setattr(agent, "preflight", lambda _p: None)
+    monkeypatch.setattr(agent, "write_hermes_layout", lambda _p, _s: None)
+    monkeypatch.setattr(agent, "recover", lambda _p: None)
+    monkeypatch.setattr(agent.subprocess, "call", lambda cmd, **kw: calls.append(list(cmd)) or 0)
+    with pytest.raises(SystemExit) as exited:
+        agent.run()
+    assert exited.value.code == 0
+    assert calls
+    assert calls[0][-2:] == ["gateway", "run"]
 
 
 def test_hermes_config_has_prd_runtime_discipline(sabre_home):
@@ -57,9 +62,14 @@ def test_hermes_config_has_prd_runtime_discipline(sabre_home):
     hooks = cfg["hooks"]["post_tool_call"]
     assert hooks
     assert "core.runtime.hook" in hooks[0]["command"]
-    assert cfg["browser"]["user_data_dir"] == str(sabre_home.browser_profile)
-    names = {j["name"] for j in cfg["cron"]}
-    assert names >= {"main-loop", "opportunity-scan", "kill-sweep", "reconcile", "promote"}
+    assert cfg["browser"]["headed"] is False
+    assert cfg["browser"]["cdp_url"] == ""
+    assert cfg["browser"]["allow_private_urls"] is False
+    assert cfg["browser"]["allow_unsafe_evaluate"] is False
+    assert cfg["browser"]["restrict_evaluate"] is True
+    assert cfg["browser"]["dialog_policy"] == "must_respond"
+    assert "user_data_dir" not in cfg.get("browser", {})
+    assert not isinstance(cfg.get("cron"), list)
     soul = layout.soul_path.read_text(encoding="utf-8")
     assert "submit_intent" in soul
     assert "never open the database" in soul.lower()
