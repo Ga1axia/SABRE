@@ -9,7 +9,8 @@ from typing import Any
 from core.ids import new_id
 from core.paths import Paths
 
-LEASE_SECONDS = 900
+LEASE_SECONDS = 300
+TURN_PROVENANCE_TTL_SECONDS = 600
 
 
 def _now() -> str:
@@ -73,6 +74,7 @@ def list_turns(paths: Paths) -> list[dict[str, Any]]:
 
 def recover(paths: Paths) -> int:
     """Expired leases become pending so a crash mid-turn does not lose the work."""
+    expire_stale_turns(paths)
     now = _now()
     n = 0
     for turn in list_turns(paths):
@@ -126,8 +128,37 @@ def complete(paths: Paths, turn_id: str) -> None:
         return
     turn["status"] = "done"
     turn["lease_until"] = None
+    turn["provenance"] = []
     turn["updated_at"] = _now()
     _write(paths, turn)
+
+
+def expire_stale_turns(paths: Paths, *, ttl_seconds: int = TURN_PROVENANCE_TTL_SECONDS) -> int:
+    """Close old open turns and drop provenance so it cannot bleed across sessions."""
+    now_dt = datetime.now(UTC)
+    n = 0
+    for turn in list_turns(paths):
+        if turn.get("status") not in {"pending", "leased"}:
+            continue
+        updated_raw = turn.get("updated_at") or turn.get("created_at") or ""
+        try:
+            updated = datetime.fromisoformat(str(updated_raw))
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=UTC)
+        except ValueError:
+            updated = now_dt
+        age = (now_dt - updated).total_seconds()
+        lease_until = turn.get("lease_until")
+        lease_expired = bool(lease_until and str(lease_until) <= _now())
+        if age >= ttl_seconds or (turn.get("status") == "leased" and lease_expired and age >= LEASE_SECONDS):
+            turn["status"] = "done"
+            turn["lease_until"] = None
+            turn["provenance"] = []
+            turn["last_error"] = turn.get("last_error") or "turn expired; provenance cleared"
+            turn["updated_at"] = _now()
+            _write(paths, turn)
+            n += 1
+    return n
 
 
 def fail(paths: Paths, turn_id: str, error: str, *, retryable: bool = True, backoff_seconds: int = 30) -> None:

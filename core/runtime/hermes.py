@@ -16,6 +16,7 @@ import yaml
 from core.config import Settings, load_settings
 from core.paths import Paths, repo_root
 from core.runtime.hermes_jobs import write_cron_jobs
+from core.runtime.terminal_allowlist import allowlist_patterns
 
 SOUL_MARKER = "<!-- sabre-managed -->"
 
@@ -173,6 +174,12 @@ def _write_config(paths: Paths, settings: Settings, home: Path) -> Path:
             ],
         },
         "hooks_auto_accept": True,
+        "command_allowlist": allowlist_patterns(python=py, workdir=paths.work),
+        "approvals": {
+            "mode": "manual",
+            "cron_mode": "deny",
+            "timeout": 120,
+        },
         # Hermes has no user_data_dir key. headed=false is the real headless switch.
         # Jobs are written to cron/jobs.json, not under config.yaml cron:.
         # chrome-debug is Hermes's hardcoded CDP profile; SABRE uses that path only.

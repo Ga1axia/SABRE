@@ -167,14 +167,30 @@ install_hermes() {
         return
     fi
     if ! curl -fsI "$HERMES_INSTALL_URL" >/dev/null 2>&1; then
-        warn "Hermes installer not reachable at $HERMES_INSTALL_URL (set SABRE_HERMES_BIN later)"
+        die "Hermes installer not reachable at $HERMES_INSTALL_URL"
+    fi
+    curl -fsSL "$HERMES_INSTALL_URL" | sh || die "hermes install script failed"
+    if ! command -v hermes >/dev/null 2>&1; then
+        die "hermes not on PATH after install; set SABRE_HERMES_BIN"
+    fi
+    info "hermes installed"
+}
+
+configure_macos_power() {
+    if [ "$PLATFORM" != macos ]; then
         return
     fi
-    curl -fsSL "$HERMES_INSTALL_URL" | sh || warn "hermes install script failed"
-    if command -v hermes >/dev/null 2>&1; then
-        info "hermes installed"
-    else
-        warn "hermes not on PATH after install; set SABRE_HERMES_BIN"
+    if ! command -v pmset >/dev/null 2>&1; then
+        die "pmset missing on macOS"
+    fi
+    pmset -c sleep 0 || die "failed to disable sleep on AC power (pmset -c sleep 0)"
+    pmset -c disablesleep 1 || die "failed to set disablesleep on AC power"
+    info "macOS sleep disabled on AC power"
+    keepawake="$SABRE_HOME/services/com.sabre.keepawake.plist"
+    if [ -f "$keepawake" ]; then
+        uid=$(id -u)
+        launchctl bootout "gui/$uid" "$keepawake" 2>/dev/null || true
+        launchctl bootstrap "gui/$uid" "$keepawake" 2>/dev/null || warn "keep-awake plist not loaded (run sabre setup --step 16)"
     fi
 }
 
@@ -201,6 +217,7 @@ main() {
     install_app
     install_package
     install_hermes
+    configure_macos_power
     link_cli
     printf '\n  ✓ sabre 0.1.0\n'
     printf '  → next: sabre setup\n'

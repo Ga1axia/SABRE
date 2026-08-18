@@ -60,23 +60,18 @@ def submit_intent_tool(arguments: dict[str, Any], paths: Paths | None = None) ->
 
 
 def provenance_for_submit(paths: Paths) -> list[dict[str, Any]]:
-    """Mechanical provenance from open turns. The agent cannot omit this to skip rule_provenance."""
-    from core.runtime.turns import list_turns
+    """Mechanical provenance from the active session's open turn only."""
+    from core.runtime.submit_context import active_session_id
+    from core.runtime.turns import expire_stale_turns, find_open
 
-    out: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for turn in list_turns(paths):
-        if turn.get("status") not in {"pending", "leased"}:
-            continue
-        for item in turn.get("provenance") or []:
-            if not isinstance(item, dict):
-                continue
-            key = json.dumps(item, sort_keys=True)
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(item)
-    return out
+    expire_stale_turns(paths)
+    session_id = active_session_id(paths)
+    if not session_id:
+        return []
+    turn = find_open(paths, session_id)
+    if not turn:
+        return []
+    return [p for p in (turn.get("provenance") or []) if isinstance(p, dict)]
 
 
 def call_tool(name: str, arguments: dict[str, Any], paths: Paths | None = None) -> dict[str, Any]:

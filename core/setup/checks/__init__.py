@@ -250,19 +250,33 @@ def check_mem(paths: Paths, settings: Settings):
 def check_sleep(paths: Paths, settings: Settings):
     if sys.platform == "darwin":
         try:
-            r = subprocess.run(["pmset", "-g"], capture_output=True, text=True, timeout=5)
-            sleep_val = None
-            for line in r.stdout.splitlines():
+            custom = subprocess.run(["pmset", "-g", "custom"], capture_output=True, text=True, timeout=5)
+            if custom.returncode != 0:
+                return False, "pmset -g custom failed"
+            ac_block = False
+            sleep_ok = False
+            disable_ok = False
+            for line in custom.stdout.splitlines():
+                if line.strip().startswith("AC Power"):
+                    ac_block = True
+                    continue
+                if not ac_block:
+                    continue
+                if line.strip().startswith("Battery Power"):
+                    break
                 parts = line.split()
                 if len(parts) >= 2 and parts[0] == "sleep":
-                    sleep_val = parts[-1]
-                    break
-            if sleep_val is None:
-                return "skip", "pmset sleep value not found"
-            ok = sleep_val == "0"
-            return ok, f"sleep={sleep_val}"
-        except Exception:
-            return "skip", "pmset not available"
+                    sleep_ok = parts[1] == "0"
+                if len(parts) >= 2 and parts[0] == "disablesleep":
+                    disable_ok = parts[1] == "1"
+            if not ac_block:
+                return False, "pmset AC Power block missing"
+            ok = sleep_ok and disable_ok
+            return ok, f"sleep={'0' if sleep_ok else '?'} disablesleep={'1' if disable_ok else '?'}"
+        except Exception as exc:  # noqa: BLE001
+            return False, f"pmset check failed: {exc}"
+    if sys.platform.startswith("linux"):
+        return "skip", "sleep assertion is macOS-only in Stage E"
     return "skip", "sleep assertion not verified on this host"
 
 
@@ -524,7 +538,7 @@ def all_checks() -> list[dict]:
         {"id": "personas.synced", "severity": "warning", "run": check_personas, "remedy": "sabre personas sync"},
         {
             "id": "runtime.hermes",
-            "severity": "warning",
+            "severity": "fatal",
             "run": check_hermes,
             "fix": fix_hermes,
             "remedy": "install.sh or set SABRE_HERMES_BIN; start sabre-agent once to write config",

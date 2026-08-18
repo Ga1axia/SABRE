@@ -68,6 +68,9 @@ def test_hermes_config_has_prd_runtime_discipline(sabre_home):
     assert cfg["browser"]["allow_unsafe_evaluate"] is False
     assert cfg["browser"]["restrict_evaluate"] is True
     assert cfg["browser"]["dialog_policy"] == "must_respond"
+    assert isinstance(cfg.get("command_allowlist"), list)
+    assert cfg["command_allowlist"]
+    assert cfg.get("approvals", {}).get("mode") == "manual"
     assert "user_data_dir" not in cfg.get("browser", {})
     assert not isinstance(cfg.get("cron"), list)
     soul = layout.soul_path.read_text(encoding="utf-8")

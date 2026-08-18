@@ -34,9 +34,13 @@ def handle_hook(payload: dict[str, Any], paths: Paths | None = None) -> dict[str
     """Hermes hook: persist turns; tool calls also go to the gate and #logs."""
     paths = paths or Paths(default_home())
     event = str(payload.get("hook_event_name") or "post_tool_call")
+    session_id = str(payload.get("session_id") or "")
     try:
+        from core.runtime.submit_context import touch
         from core.runtime.turns import record_hook
 
+        if session_id:
+            touch(paths, session_id)
         record_hook(paths, payload)
     except Exception:
         _tap_failure(paths)
@@ -50,6 +54,7 @@ def handle_hook(payload: dict[str, Any], paths: Paths | None = None) -> dict[str
     duration = extra.get("duration_ms") if extra.get("duration_ms") is not None else payload.get("duration_ms")
     err = extra.get("error") or payload.get("error")
     status = "error" if err else "ok"
+    _maybe_alert_terminal_denial(paths, tool, args, err, extra, status)
     args_text = redact(_truncate(json.dumps(args, default=str)), paths)
     emit(
         paths,
@@ -72,6 +77,46 @@ def handle_hook(payload: dict[str, Any], paths: Paths | None = None) -> dict[str
     }
     _mirror_logs(paths, line)
     return {}
+
+
+def _maybe_alert_terminal_denial(
+    paths: Paths,
+    tool: str,
+    args: dict[str, Any],
+    err: Any,
+    extra: dict[str, Any],
+    status: str,
+) -> None:
+    if tool not in {"terminal", "shell", "run_terminal_cmd", "execute"}:
+        return
+    command = str(args.get("command") or args.get("cmd") or "")
+    blob = " ".join(
+        str(x)
+        for x in (
+            command,
+            err,
+            extra.get("error"),
+            extra.get("result"),
+            extra.get("output"),
+            status,
+        )
+        if x
+    ).lower()
+    markers = ("blocked", "denied", "approval", "not approved", "consent", "timeout")
+    if not any(m in blob for m in markers):
+        return
+    try:
+        from core.watch.alert import alert_once
+
+        key = f"terminal:denied:{hash(command) & 0xFFFF_FFFF}"
+        alert_once(
+            paths,
+            key,
+            f"terminal command denied (not on allowlist): `{command[:240]}`",
+            "status",
+        )
+    except Exception:
+        pass
 
 
 def _turn_context(paths: Paths, payload: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
