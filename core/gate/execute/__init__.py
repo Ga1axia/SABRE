@@ -25,6 +25,7 @@ def execute_intent(kind: str, payload: dict[str, Any], drivers: dict[str, Any], 
             limit = int(payload.get("limit_cents") or 40_000)
             card = cards.issue(str(venture_id or "unassigned"), limit)
             card_id = card.id
+            provider_ref = card.provider_ref
             conn.execute(
                 """INSERT INTO cards(id, venture_id, provider_ref, limit_cents, spent_cents, status, issued_at)
                    VALUES (?,?,?,?,?,?,?)""",
@@ -32,12 +33,26 @@ def execute_intent(kind: str, payload: dict[str, Any], drivers: dict[str, Any], 
             )
             if venture_id:
                 conn.execute("UPDATE ventures SET card_id=? WHERE id=?", (card_id, venture_id))
+        else:
+            row = conn.execute("SELECT provider_ref FROM cards WHERE id=?", (card_id,)).fetchone()
+            provider_ref = row["provider_ref"] if row else ""
         charge_id = new_id("CH")
-        if hasattr(cards, "record_transaction"):
-            cards.record_transaction(
-                card_id,
-                Charge(id=charge_id, amount_cents=amount, occurred_at=utcnow(), card_id=card_id),
-            )
+        try:
+            if hasattr(cards, "authorize"):
+                charge = cards.authorize(
+                    card_id,
+                    amount,
+                    provider_ref=str(provider_ref or ""),
+                    merchant=str(payload.get("vendor") or payload.get("description") or "SABRE"),
+                )
+                charge_id = charge.id
+            elif hasattr(cards, "record_transaction"):
+                cards.record_transaction(
+                    card_id,
+                    Charge(id=charge_id, amount_cents=amount, occurred_at=utcnow(), card_id=card_id),
+                )
+        except SabreError:
+            raise
         tx_id = new_id("TX")
         conn.execute(
             """INSERT INTO transactions(

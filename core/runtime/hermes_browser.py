@@ -45,3 +45,9 @@ def is_sabre_owned_cdp(paths: Paths, url: str) -> bool:
     except OSError:
         return False
     return bool(owned) and owned == token
+
+
+def stamp_cdp_marker(paths: Paths, url: str) -> None:
+    marker = cdp_marker_path(paths)
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text((url or "").strip() + "\n", encoding="utf-8")

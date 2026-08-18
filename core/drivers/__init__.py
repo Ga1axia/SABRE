@@ -76,6 +76,14 @@ class CardDriver(Protocol):
     def close(self, card_id: str) -> None: ...
     def balance(self, card_id: str) -> Balance: ...
     def list_transactions(self, card_id: str, since: str) -> list[Charge]: ...
+    def authorize(
+        self,
+        card_id: str,
+        amount_cents: int,
+        *,
+        provider_ref: str = "",
+        merchant: str = "",
+    ) -> Charge: ...
 
 
 @runtime_checkable

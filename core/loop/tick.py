@@ -6,6 +6,7 @@ from typing import Any
 
 from core.gate.client import gate_get, gate_post
 from core.loop.board import list_tasks, load_task, write_task
+from core.loop.discover import discover as discover_candidates
 from core.loop.scan import scan as scan_opportunities
 from core.paths import Paths
 from core.watch.killswitch import is_killed
@@ -31,7 +32,9 @@ def scan(paths: Paths) -> dict[str, Any]:
     for row in listing.get("skills") or []:
         if str(row.get("status") or "") == "promoted":
             promoted.add(str(row.get("name") or row.get("id") or ""))
+    discovery = discover_candidates(paths)
     result = scan_opportunities(paths, promoted)
+    result["discovery"] = discovery
     result["ok"] = True
     return result
 

@@ -37,10 +37,12 @@ slack = "core.drivers.messaging.slack:SlackDriver"
 [project.entry-points."sabre.drivers.cards"]
 disabled = "core.drivers.cards.disabled:DisabledCardDriver"
 memory = "core.drivers.cards.memory:MemoryCardDriver"
+lithic = "core.drivers.cards.lithic:LithicCardDriver"
 
 [project.entry-points."sabre.drivers.payments"]
 disabled = "core.drivers.payments.disabled:DisabledPaymentDriver"
 memory = "core.drivers.payments.memory:MemoryPaymentDriver"
+stripe = "core.drivers.payments.stripe:StripePaymentDriver"
 
 [project.entry-points."sabre.drivers.hosting"]
 disabled = "core.drivers.hosting.disabled:DisabledHostingDriver"
